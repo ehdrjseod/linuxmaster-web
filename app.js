@@ -80,6 +80,7 @@ function validateState(value){
   const s=value.session;
   if(s){
     if(!['exam','practice'].includes(s.mode) || typeof s.label!=='string'||s.label.length>100||!Array.isArray(s.items)||!s.items.length||s.items.length>1000||!Number.isInteger(s.index)||s.index<0||s.index>=s.items.length||!validNum(s.started)||!validNum(s.deadline)||typeof s.finished!=='boolean')return null;
+    if(s.focus?.course&&(!s.courseRead||typeof s.courseRead!=='object'||Array.isArray(s.courseRead)||Object.entries(s.courseRead).some(([k,v])=>!/^([0-5])$/.test(k)||typeof v!=='boolean')||s.items.some(i=>!Number.isInteger(i.lesson)||i.lesson<0||i.lesson>5)))return null;
     if(s.focus!==undefined&&(!s.focus||s.mode!=='practice'||!Array.isArray(s.focus.conceptIds)||!s.focus.conceptIds.length||s.focus.conceptIds.length>6||!s.focus.conceptIds.every(id=>CONCEPTS.some(c=>c.id===id))))return null;
     if(!s.applied || typeof s.applied!=='object')return null;
     for(const item of s.items){
@@ -99,7 +100,7 @@ function validArchivedItem(it){
     &&['checked','unsure','correct'].every(k=>typeof it[k]==='boolean')
     &&Array.isArray(it.answers)&&it.answers.length>0&&it.answers.every(n=>Number.isInteger(n)&&n>=0&&n<4);
 }
-function archiveItems(s){return s.items.map(it=>({id:it.id,order:[...it.order],selected:it.selected,checked:it.checked,unsure:it.unsure,
+function archiveItems(s){return s.items.map(it=>({id:it.id,order:[...it.order],selected:it.selected,checked:it.checked,unsure:it.unsure,...(Number.isInteger(it.lesson)?{lesson:it.lesson}:{}),
   correct:it.checked&&isCorrect(BY_ID[it.id],it.selected),answers:[0,1,2,3].filter(n=>isCorrect(BY_ID[it.id],n))}));}
 function recoverLastArchive(){
   const s=state.session;if(!s?.finished)return false;
@@ -199,7 +200,7 @@ function startFocus(){
 function focusConcept(q){return CONCEPTS.find(c=>c.questionIds.includes(q.id));}
 function focusExplanation(q){const c=focusConcept(q);return c?`<div class="memory"><h3>${esc(c.title)}</h3><p>${esc(c.summary)}</p><p><strong>예제:</strong> ${esc(c.example)}</p><p><strong>주의:</strong> ${esc(c.pitfall)}</p></div>`:'';}
 function extendFocus(){
-  const s=state.session;if(!s.focus||s.items.length>=990)return;
+  const s=state.session;if(!s.focus||s.focus.course||s.items.length>=990)return;
   const pool=s.focus.conceptIds.flatMap(id=>conceptQuestions(CONCEPTS.find(c=>c.id===id)));
   const recent=new Set(s.items.slice(-3).map(i=>i.id));
   const counts=id=>s.items.filter(i=>i.id===id).length;
@@ -209,7 +210,7 @@ function extendFocus(){
 function choose(index){
   const s=state.session;if(!s||s.finished)return;
   if((s.mode==='exam'||s.focus)&&Date.now()>=s.deadline){finish(true);return;}
-  const item=s.items[s.index];if(item.checked)return;
+  const item=s.items[s.index];if(item.checked||(s.focus?.course&&!s.courseRead?.[item.lesson]))return;
   item.selected=index;if(s.focus){check();return;}save();renderQuiz(false);
 }
 function check(){
@@ -217,10 +218,11 @@ function check(){
   const item=s.items[s.index];if(item.checked||item.selected===null)return;
   const q=BY_ID[item.id],correct=isCorrect(q,item.selected);
   item.checked=true;applyResult(q,correct,item.unsure);
-  if((!correct||item.unsure)&&(!item.retry||s.focus)&&s.items.length<990&&!s.items.some((it,i)=>i>s.index&&it.id===q.id)){
+  if(s.focus?.course&&(!correct||item.unsure))courseRetry(s,item,q);
+  if(!s.focus?.course&&(!correct||item.unsure)&&(!item.retry||s.focus)&&s.items.length<990&&!s.items.some((it,i)=>i>s.index&&it.id===q.id)){
     s.items.splice(Math.min(s.index+4,s.items.length),0,s.focus?focusItem(q):makeItem(q,true));
   }
-  if(s.focus&&s.items.length-s.index<4)extendFocus();
+  if(s.focus&&!s.focus.course&&s.items.length-s.index<4)extendFocus();
   save();renderQuiz(false);updateBadges();
   const explanation=document.querySelector('.explanation');explanation?.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
@@ -228,14 +230,15 @@ function renderQuiz(scroll=true){
   const s=state.session;
   if(!s){go('learn');return;}if(s.finished){renderResult();return;}
   const item=s.items[s.index],q=BY_ID[item.id];
+  if(s.focus?.course&&!s.courseRead?.[item.lesson]){courseIntro();return;}
   const answered=s.items.filter(i=>s.mode==='exam'?i.selected!==null:i.checked).length;
   main.innerHTML=heading(esc(s.label),s.focus?'보기를 누르면 바로 정답·해설이 나옵니다. 읽고 다음 문제를 누르세요. 헷갈리면 선택 전에 체크하세요.':s.mode==='exam'?'실전 모드에서는 제출한 뒤 정답과 해설을 확인할 수 있습니다.':'모르는 문제도 먼저 골라 보세요. 해설에서 이유를 확인하면 더 오래 기억납니다.',`<span class="pill outline">${s.mode==='exam'?'EXAM MODE':'LEARNING MODE'}</span>`)+`
   <div class="quiz-layout"><section class="quiz-card"><div class="quiz-head"><div class="flex"><span class="pill">${TOPIC[q.topic].name}</span>${q.red?'<span class="pill red">● 빨간 핵심</span>':''}${item.retry?'<span class="pill outline">한 번 더</span>':''}</div><span class="quiz-number">QUESTION ${String(s.index+1).padStart(2,'0')} / ${s.items.length}</span></div>
   <h2 id="question-title" >${esc(q.prompt)}</h2>${q.examDate?questionImages(q):''}<div class="option-list ${q.examDate?'past-options':''}" role="group" aria-labelledby="question-title">${item.order.map((n,i)=>`<button class="option ${item.selected===n?'selected':''} ${item.checked&&isCorrect(q,n)?'correct':''} ${item.checked&&item.selected===n&&!isCorrect(q,n)?'wrong':''}" data-action="choose" data-value="${n}" aria-pressed="${item.selected===n}" ${item.checked?'disabled':''}><span class="num">${i+1}</span><span>${esc(q.options[n])}</span>${item.checked&&isCorrect(q,n)?'<span class="answer-icon">✓</span>':''}</button>`).join('')}</div>
   <div class="quiz-tools"><label class="check"><input id="unsure" type="checkbox" ${item.unsure?'checked':''} ${item.checked?'disabled':''}> 맞혀도 헷갈려요</label><div class="flex"><button class="bookmark ${progress(q.id).bookmark?'on':''}" data-action="bookmark">${progress(q.id).bookmark?'★ 저장됨':'☆ 핵심 노트에 저장'}</button>${s.mode==='exam'?`<button class="bookmark ${item.flag?'on':''}" data-action="flag">${item.flag?'⚑ 표시됨':'⚐ 나중에 검토'}</button>`:''}</div></div>
-  ${item.checked?explanation(q,isCorrect(q,item.selected),item.unsure)+(s.focus?focusExplanation(q):''):''}
+  ${item.checked?explanation(q,isCorrect(q,item.selected),item.unsure)+(s.focus?focusExplanation(q):'')+(s.focus?.course?button(item.unsure?'헷갈림 · 복습 예약됨':'맞혔어도 헷갈려요','course-unsure',item.unsure?'disabled':'','secondary small'):''):''}
   <div class="quiz-nav">${button('← 이전','previous',s.index===0?'disabled':'','secondary')}<span class="small muted">${answered} / ${s.items.length} ${s.mode==='exam'?'선택':'채점'}</span>${s.mode==='practice'&&!item.checked?button('정답 확인','check',item.selected===null?'disabled':''):button(s.index===s.items.length-1?'결과 보기 →':'다음 문제 →',s.index===s.items.length-1?'finish':'next')}</div>
-  </section><aside class="quiz-aside"><div class="panel"><h3>${s.mode==='exam'||s.focus?'남은 시간':'학습 진행'}</h3>${s.mode==='exam'||s.focus?'<div class="timer" id="timer"></div>':`<p class="small" style="margin-top:7px">${answered}문항 채점 · ${s.items.length-answered}문항 남음</p>${bar(pct(answered,s.items.length))}`}<div class="answer-map" aria-label="문항 이동">${s.items.map((it,i)=>`<button class="map-btn ${(s.mode==='exam'?it.selected!==null:it.checked)?'answered':''} ${i===s.index?'current':''} ${it.flag?'flagged':''} ${it.checked&&!isCorrect(BY_ID[it.id],it.selected)?'miss':''}" data-action="jump" data-index="${i}" aria-label="${i+1}번${it.checked?' 채점 완료':it.selected!==null?' 선택 완료':''}${it.flag?' 검토 표시':''}" ${i===s.index?'aria-current="step"':''}>${i+1}</button>`).join('')}</div><p class="small muted">초록: ${s.mode==='exam'?'답 선택':'채점 완료'}${s.mode==='exam'?' · 점: 검토 표시':' · 빨강: 오답'}</p><div style="margin-top:18px">${button(s.mode==='exam'?'답안 제출하기':'여기까지 학습 완료','finish','','secondary')}</div><a class="text-link" style="display:block;margin-top:13px" href="#home">${s.mode==='exam'||s.focus?'대시보드로 (시간은 계속 흐름)':'잠시 쉬기 · 자동 저장'}</a><p class="keyboard-tip">1–4 보기 선택<br>Enter 채점 / 다음 · ← → 문항 이동<br>${s.focus?'보기를 누르면 즉시 채점합니다. 오답·헷갈림을 반복하고 다른 문제도 섞습니다. 1시간 후 자동 종료합니다.':s.mode==='practice'?'틀린 문제는 몇 문제 뒤 1회 재등장하며, 추가 회독은 복습에서 진행합니다.':'미응답은 오답으로 채점됩니다(모두 정답 문항 제외).'}</p></div></aside></div>`;
+  </section><aside class="quiz-aside"><div class="panel"><h3>${s.mode==='exam'||s.focus?'남은 시간':'학습 진행'}</h3>${s.mode==='exam'||s.focus?'<div class="timer" id="timer"></div>':`<p class="small" style="margin-top:7px">${answered}문항 채점 · ${s.items.length-answered}문항 남음</p>${bar(pct(answered,s.items.length))}`}<div class="answer-map" aria-label="문항 이동">${s.items.map((it,i)=>`<button class="map-btn ${(s.mode==='exam'?it.selected!==null:it.checked)?'answered':''} ${i===s.index?'current':''} ${it.flag?'flagged':''} ${it.checked&&!isCorrect(BY_ID[it.id],it.selected)?'miss':''}" data-action="jump" data-index="${i}" aria-label="${i+1}번${it.checked?' 채점 완료':it.selected!==null?' 선택 완료':''}${it.flag?' 검토 표시':''}" ${i===s.index?'aria-current="step"':''}>${i+1}</button>`).join('')}</div><p class="small muted">초록: ${s.mode==='exam'?'답 선택':'채점 완료'}${s.mode==='exam'?' · 점: 검토 표시':' · 빨강: 오답'}</p><div style="margin-top:18px">${button(s.mode==='exam'?'답안 제출하기':'여기까지 학습 완료','finish','','secondary')}</div><a class="text-link" style="display:block;margin-top:13px" href="#home">${s.mode==='exam'||s.focus?'대시보드로 (시간은 계속 흐름)':'잠시 쉬기 · 자동 저장'}</a><p class="keyboard-tip">1–4 보기 선택<br>Enter 채점 / 다음 · ← → 문항 이동<br>${s.focus?.course?'단계마다 설명을 읽고 연습합니다. 오답·헷갈림은 단계 안에서 최대 두 번 추가로 풀고 종합 복습에서 다시 확인합니다.':s.focus?'보기를 누르면 즉시 채점합니다. 오답·헷갈림을 반복하고 다른 문제도 섞습니다. 1시간 후 자동 종료합니다.':s.mode==='practice'?'틀린 문제는 몇 문제 뒤 1회 재등장하며, 추가 회독은 복습에서 진행합니다.':'미응답은 오답으로 채점됩니다(모두 정답 문항 제외).'}</p></div></aside></div>`;
   if(scroll)window.scrollTo(0,0);updateTimer();
 }
 function explanation(q,correct=true,unsure=false){
@@ -268,7 +271,7 @@ function renderResult(){
     <section class="result-hero"><span class="eyebrow">${s.mode==='exam'?'MOCK EXAM RESULT':'SESSION COMPLETE'}</span><div class="result-score">${checked.length?Number(score.toFixed(2)):'—'}<small> / 100</small></div><h2>${!checked.length?'채점한 문항이 없습니다.':s.mode==='exam'?(pass?'이번 연습은 합격 기준 충족':'취약한 개념을 한 번 더 복습해요'):'오늘의 학습을 기록했어요.'}</h2><p>${correct} / ${checked.length}문항 정답 · ${wrong.length}문항 오답 또는 헷갈림</p><div class="flex">${wrong.length?button('이번 오답 다시 풀기 ↻','retry-result','','lime'):button('다음 학습 선택 →','learn','','lime')}<a class="btn ghost" href="#history">저장된 풀이 기록</a><a class="btn ghost" href="#home">대시보드로</a></div></section>
     <section class="stats">${subjects.map((x,i)=>stat(i===0?'리눅스 운영 및 관리':'리눅스 활용',x.total?pct(x.correct,x.total):'—','%',`${x.correct} / ${x.total}문항 · ${x.total?(x.correct/x.total<.4?'40% 미만': '40% 이상'):'미응시'}`)).join('')}${stat('걸린 시간',Math.max(1,Math.round(((s.ended||Date.now())-s.started)/MINUTE)),'분','시작부터 완료까지 경과 시간')}${stat('누적 암기 완료',ALL_QUESTIONS.filter(mastered).length,'문항','시간 간격을 둔 3단계 복습')}</section>
     ${s.mode==='exam'?'<div class="callout">총점 60점 이상과 두 과목 각각 40% 이상을 모두 충족해야 합니다. 학습용 채점 결과이며 실제 시험 성적을 예측하거나 보장하지 않습니다.</div>':''}
-    <div class="section-heading"><h2>문항별 해설</h2><span class="text-link">선택한 답과 정답 비교</span></div><div class="result-list">${s.items.map((it,i)=>{const q=BY_ID[it.id],ok=it.checked&&isCorrect(q,it.selected);return `<details><summary><span class="pill ${ok?'':'red'}">${!it.checked?'미채점':ok?'정답':'오답'}</span><span>${i+1}. ${esc(q.prompt)}</span></summary><p>내 선택: <strong>${it.selected===null?'미응답':esc(q.options[it.selected])}</strong></p>${q.examDate?questionImages(q):''}${explanation(q,ok,it.unsure)}</details>`;}).join('')}</div>`;
+    ${courseSummary()}<div class="section-heading"><h2>문항별 해설</h2><span class="text-link">선택한 답과 정답 비교</span></div><div class="result-list">${s.items.map((it,i)=>{const q=BY_ID[it.id],ok=it.checked&&isCorrect(q,it.selected);return `<details><summary><span class="pill ${ok?'':'red'}">${!it.checked?'미채점':ok?'정답':'오답'}</span><span>${i+1}. ${esc(q.prompt)}</span></summary><p>내 선택: <strong>${it.selected===null?'미응답':esc(q.options[it.selected])}</strong></p>${q.examDate?questionImages(q):''}${explanation(q,ok,it.unsure)}</details>`;}).join('')}</div>`;
 }
 
 function review(){
@@ -336,7 +339,7 @@ function notes(){
   const saved=location.hash==='#notes/saved',cs=filteredConcepts();
   const pages=Math.max(1,Math.ceil(cs.length/10));notePage=Math.max(0,Math.min(notePage,pages-1));
   main.innerHTML=heading(saved?'저장한 문제가 있는 개념':'반복 문제를 하나의 개념으로',`${ALL_QUESTIONS.length.toLocaleString()}개 문제를 ${CONCEPTS.length}개 개념으로 정리했습니다. 설명 → 비교 → 예제를 읽고 관련 문제로 확인하세요.`, `<a class="btn secondary small" href="${saved?'#notes':'#notes/saved'}">${saved?'전체 개념':'★ 저장한 문제의 개념'}</a>`)+`
-  <div class="callout"><strong>1시간 집중 학습</strong><p>현재 검색·단원 조건에서 오답이 많은 개념을 우선해 최대 6개를 반복합니다. 한 문제마다 즉시 정답과 설명을 확인합니다. 시간은 화면을 떠나도 계속 흐릅니다.</p>${button('1시간 집중 학습 시작','start-focus')}</div><div class="searchbar"><input type="search" id="note-search" placeholder="df, bash_profile, 서브넷…" aria-label="핵심 노트 검색" value="${esc(noteQuery)}"><select id="note-topic" aria-label="노트 단원"><option value="all">전체 단원</option>${TOPICS.map(t=>`<option value="${t.id}" ${noteTopic===t.id?'selected':''}>${t.name}</option>`).join('')}</select><label class="check"><input id="note-red" type="checkbox" ${noteRed?'checked':''}>빨간 핵심</label><label class="check"><input id="note-wrong" type="checkbox" ${noteWrong?'checked':''}>오답 있는 개념</label></div>
+  <div class="callout"><h2>이해부터 시작하는 맞춤 코스</h2><p>특수 권한·우선순위·쿼터·Bash·패키지를 순서대로 배우고 종합 복습합니다.</p><a class="btn" href="#curriculum">맞춤 커리큘럼 열기</a></div><div class="callout"><strong>1시간 집중 학습</strong><p>현재 검색·단원 조건에서 오답이 많은 개념을 우선해 최대 6개를 반복합니다. 한 문제마다 즉시 정답과 설명을 확인합니다. 시간은 화면을 떠나도 계속 흐릅니다.</p>${button('1시간 집중 학습 시작','start-focus')}</div><div class="searchbar"><input type="search" id="note-search" placeholder="df, bash_profile, 서브넷…" aria-label="핵심 노트 검색" value="${esc(noteQuery)}"><select id="note-topic" aria-label="노트 단원"><option value="all">전체 단원</option>${TOPICS.map(t=>`<option value="${t.id}" ${noteTopic===t.id?'selected':''}>${t.name}</option>`).join('')}</select><label class="check"><input id="note-red" type="checkbox" ${noteRed?'checked':''}>빨간 핵심</label><label class="check"><input id="note-wrong" type="checkbox" ${noteWrong?'checked':''}>오답 있는 개념</label></div>
   <div class="section-heading"><span class="text-link">${cs.length}개 개념 · ${notePage+1} / ${pages}페이지</span>${saved&&cs.length?button('저장한 문제 풀기','start-saved','','small'):''}</div>
   <div class="note-list">${cs.length?cs.slice(notePage*10,notePage*10+10).map(c=>{
     const qs=conceptQuestions(c),wrong=qs.filter(q=>progress(q.id).wrong).length;
@@ -357,10 +360,10 @@ function updateTimer(){const s=state.session;if(!s||s.finished||(s.mode!=='exam'
 function render(){
   clearInterval(timerHandle);
   const route=(location.hash.slice(1)||'home').split('/'),name=route[0];
-  const labels={home:'학습 대시보드',learn:'문제 풀기',review:'오답 · 복습',exam:'실전 모의고사',past:'기출 회차',notes:'핵심 노트',plan:'2일 학습 플랜',session:isExam()?(state.session.examDate?'기출시험':'실전 모의고사'):'문제 풀기',history:'풀이 기록',sync:'학습 동기화',about:'자료 · 학습 안내'};
+  const labels={home:'학습 대시보드',learn:'문제 풀기',review:'오답 · 복습',exam:'실전 모의고사',past:'기출 회차',notes:'핵심 노트',curriculum:'맞춤 학습 코스',plan:'2일 학습 플랜',session:isExam()?(state.session.examDate?'기출시험':'실전 모의고사'):'문제 풀기',history:'풀이 기록',sync:'학습 동기화',about:'자료 · 학습 안내'};
   document.getElementById('page-title').textContent=labels[name]||labels.home;
   document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('active',a.dataset.nav===(name==='session'?(isExam()?(state.session.examDate?'past':'exam'):'learn'):name)));
-  if(name==='home')home();else if(name==='learn')learn(route[1]);else if(name==='review')review();else if(name==='exam')exam();else if(name==='past')pastExams(route[1]);else if(name==='notes')notes();else if(name==='plan')plan();else if(name==='session')renderQuiz();else if(name==='history')historyPage(route[1],route[2]);else if(name==='sync')syncPage();else if(name==='about')about();else home();
+  if(name==='home')home();else if(name==='learn')learn(route[1]);else if(name==='review')review();else if(name==='exam')exam();else if(name==='past')pastExams(route[1]);else if(name==='notes')notes();else if(name==='curriculum')curriculumPage();else if(name==='plan')plan();else if(name==='session')renderQuiz();else if(name==='history')historyPage(route[1],route[2]);else if(name==='sync')syncPage();else if(name==='about')about();else home();
   updateBadges();showStorageWarning();window.scrollTo(0,0);
   if(activeSession()&&(isExam()||state.session.focus)){updateTimer();timerHandle=setInterval(updateTimer,1000);}
 }
@@ -394,6 +397,9 @@ document.addEventListener('click',event=>{
     case 'bookmark-note':{toggleBookmark(el.dataset.id);el.textContent=progress(el.dataset.id).bookmark?'★ 저장됨':'☆ 저장';el.classList.toggle('on',progress(el.dataset.id).bookmark);break;}
     case 'flag':s.items[s.index].flag=!s.items[s.index].flag;save();renderQuiz(false);break;
     case 'retry-result':{const ids=[...new Set(s.items.filter(i=>i.checked&&(!isCorrect(BY_ID[i.id],i.selected)||i.unsure)).map(i=>i.id))];start(ids.map(id=>BY_ID[id]),'이번 오답 재도전','practice','all');break;}
+    case 'start-curriculum':startCurriculum();break;
+    case 'course-ready':courseReady();break;
+    case 'course-unsure':courseUnsure();break;
     case 'start-focus':startFocus();break;
     case 'start-concept':startConcept(el.dataset.id);break;
     case 'notes-prev':notePage--;notes();window.scrollTo(0,0);break;

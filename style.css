@@ -47,3 +47,7 @@
 .concept-related {margin-top:18px}
 .concept-related > details {margin:12px 0;border-top:1px solid var(--line);padding-top:12px}
 .concept-related summary {overflow-wrap:anywhere}
+.course-intro {max-width:850px;line-height:1.85}
+.course-intro li {margin:14px 0}
+.course-intro > p {margin:18px 0}
+.course-intro details {padding:16px;border:1px solid var(--line);border-radius:10px}
