@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#183f35">
+  <title>리눅스마스터 · 2일 집중 CBT</title>
+  <link rel="stylesheet" href="style.css?v=20260910-sync-menu">
+  <script>window.STATIC_CBT = true;</script>
+  <script defer src="questions.js"></script>
+  <script defer src="past-exams.js"></script>
+  <script defer src="past-reviews.js"></script>
+  <script defer src="app.js?v=20260910-sync-menu"></script>
+</head>
+<body>
+  <a class="skip" href="#main">본문으로 이동</a>
+  <aside class="sidebar">
+    <a class="brand" href="#home"><span class="brand-icon">&gt;_</span><span>linux<span class="brand-light">master</span><small>2급 2차 · STUDY ROOM</small></span></a>
+    <div class="sidebar-label">MY WORKSPACE</div>
+    <nav aria-label="주 메뉴">
+      <a href="#home" data-nav="home"><span>▦</span> 학습 대시보드</a>
+      <a href="#learn" data-nav="learn"><span>▤</span> 문제 풀기</a>
+      <a href="#review" data-nav="review"><span>↻</span> 오답 · 복습 <i id="review-count">0</i></a>
+      <a href="#exam" data-nav="exam"><span>◷</span> 실전 모의고사</a>
+      <a href="#past" data-nav="past"><span>▣</span> 기출 회차</a>
+      <a href="#notes" data-nav="notes"><span>⌕</span> 핵심 노트</a>
+    </nav>
+    <div class="sidebar-plan"><span class="eyebrow">YOUR NEXT TWO DAYS</span><h3>조금씩 풀고,<br>다시 만나면 기억하기.</h3><p>개념 → 문제 → 해설 → 복습<br>짧은 회독을 쌓아 보세요.</p><a href="#plan">2일 학습 플랜 <span>↗</span></a></div>
+    <div class="sidebar-bottom"><span class="status-dot"></span> <span>이 브라우저에 자동 저장</span><small>정리본 학습 + 회차별 기출시험</small></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span>리눅스마스터 <span class="muted">/</span> <strong id="page-title">학습 대시보드</strong></span><span class="top-tag">2급 2차 <b>CBT</b></span></header>
+    <main id="main" tabindex="-1"></main>
+    <footer>자체 제작 연습문제와 사용자 제공 기출문제를 구분해 제공합니다.<a href="#about">자료 · 학습 안내</a></footer>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <input id="import-file" type="file" accept="application/json" hidden>
+  <noscript>문제를 풀려면 브라우저의 JavaScript를 활성화해 주세요.</noscript>
+</body>
+</html>
