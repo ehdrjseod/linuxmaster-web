@@ -80,6 +80,7 @@ function validateState(value){
   const s=value.session;
   if(s){
     if(!['exam','practice'].includes(s.mode) || typeof s.label!=='string'||s.label.length>100||!Array.isArray(s.items)||!s.items.length||s.items.length>1000||!Number.isInteger(s.index)||s.index<0||s.index>=s.items.length||!validNum(s.started)||!validNum(s.deadline)||typeof s.finished!=='boolean')return null;
+    if(s.focus!==undefined&&(!s.focus||s.mode!=='practice'||!Array.isArray(s.focus.conceptIds)||!s.focus.conceptIds.length||s.focus.conceptIds.length>6||!s.focus.conceptIds.every(id=>CONCEPTS.some(c=>c.id===id))))return null;
     if(!s.applied || typeof s.applied!=='object')return null;
     for(const item of s.items){
       if(!BY_ID[item.id]||!Array.isArray(item.order)||item.order.length!==4||new Set(item.order).size!==4||!item.order.every(n=>Number.isInteger(n)&&n>=0&&n<4))return null;
@@ -185,20 +186,41 @@ function applyResult(q,correct,unsure){
   state.progress[q.id]=p;
   if(typeof Sync!=='undefined')Sync.graded(q,p,correct);
 }
+function startFocus(){
+  const candidates=filteredConcepts();
+  if(!candidates.length){toast('학습할 개념이 없습니다. 필터를 바꿔 주세요.');return;}
+  const selected=[...candidates].sort((a,b)=>conceptQuestions(b).filter(q=>progress(q.id).wrong||progress(q.id).unsure).length-conceptQuestions(a).filter(q=>progress(q.id).wrong||progress(q.id).unsure).length).slice(0,6);
+  const pool=selected.flatMap(c=>conceptQuestions(c));
+  const old=state.session;start(pool,'1시간 집중 학습','practice',Math.min(18,pool.length));
+  if(state.session===old)return;
+  state.session.focus={conceptIds:selected.map(c=>c.id)};
+  state.session.deadline=Date.now()+HOUR;save();render();
+}
+function focusConcept(q){return CONCEPTS.find(c=>c.questionIds.includes(q.id));}
+function focusExplanation(q){const c=focusConcept(q);return c?`<div class="memory"><h3>${esc(c.title)}</h3><p>${esc(c.summary)}</p><p><strong>예제:</strong> ${esc(c.example)}</p><p><strong>주의:</strong> ${esc(c.pitfall)}</p></div>`:'';}
+function extendFocus(){
+  const s=state.session;if(!s.focus||s.items.length>=990)return;
+  const pool=s.focus.conceptIds.flatMap(id=>conceptQuestions(CONCEPTS.find(c=>c.id===id)));
+  const recent=new Set(s.items.slice(-3).map(i=>i.id));
+  const counts=id=>s.items.filter(i=>i.id===id).length;
+  const qs=shuffle(pool).sort((a,b)=>Number(recent.has(a.id))-Number(recent.has(b.id))||priority(a)-priority(b)||counts(a.id)-counts(b.id));
+  s.items.push(...qs.slice(0,Math.min(6,990-s.items.length)).map(q=>makeItem(q,true)));
+}
 function choose(index){
   const s=state.session;if(!s||s.finished)return;
-  if(s.mode==='exam'&&Date.now()>=s.deadline){finish(true);return;}
+  if((s.mode==='exam'||s.focus)&&Date.now()>=s.deadline){finish(true);return;}
   const item=s.items[s.index];if(item.checked)return;
-  item.selected=index;save();renderQuiz(false);
+  item.selected=index;if(s.focus){check();return;}save();renderQuiz(false);
 }
 function check(){
   const s=state.session;if(!s||s.finished||s.mode==='exam')return;
   const item=s.items[s.index];if(item.checked||item.selected===null)return;
   const q=BY_ID[item.id],correct=isCorrect(q,item.selected);
   item.checked=true;applyResult(q,correct,item.unsure);
-  if((!correct||item.unsure)&&!item.retry&&!s.items.some((it,i)=>i>s.index&&it.id===q.id)){
+  if((!correct||item.unsure)&&(!item.retry||s.focus)&&s.items.length<990&&!s.items.some((it,i)=>i>s.index&&it.id===q.id)){
     s.items.splice(Math.min(s.index+4,s.items.length),0,makeItem(q,true));
   }
+  if(s.focus&&s.items.length-s.index<4)extendFocus();
   save();renderQuiz(false);updateBadges();
   const explanation=document.querySelector('.explanation');explanation?.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
@@ -207,13 +229,13 @@ function renderQuiz(scroll=true){
   if(!s){go('learn');return;}if(s.finished){renderResult();return;}
   const item=s.items[s.index],q=BY_ID[item.id];
   const answered=s.items.filter(i=>s.mode==='exam'?i.selected!==null:i.checked).length;
-  main.innerHTML=heading(esc(s.label),s.mode==='exam'?'실전 모드에서는 제출한 뒤 정답과 해설을 확인할 수 있습니다.':'모르는 문제도 먼저 골라 보세요. 해설에서 이유를 확인하면 더 오래 기억납니다.',`<span class="pill outline">${s.mode==='exam'?'EXAM MODE':'LEARNING MODE'}</span>`)+`
+  main.innerHTML=heading(esc(s.label),s.focus?'보기를 누르면 바로 정답·해설이 나옵니다. 읽고 다음 문제를 누르세요. 헷갈리면 선택 전에 체크하세요.':s.mode==='exam'?'실전 모드에서는 제출한 뒤 정답과 해설을 확인할 수 있습니다.':'모르는 문제도 먼저 골라 보세요. 해설에서 이유를 확인하면 더 오래 기억납니다.',`<span class="pill outline">${s.mode==='exam'?'EXAM MODE':'LEARNING MODE'}</span>`)+`
   <div class="quiz-layout"><section class="quiz-card"><div class="quiz-head"><div class="flex"><span class="pill">${TOPIC[q.topic].name}</span>${q.red?'<span class="pill red">● 빨간 핵심</span>':''}${item.retry?'<span class="pill outline">한 번 더</span>':''}</div><span class="quiz-number">QUESTION ${String(s.index+1).padStart(2,'0')} / ${s.items.length}</span></div>
   <h2 id="question-title" >${esc(q.prompt)}</h2>${q.examDate?questionImages(q):''}<div class="option-list ${q.examDate?'past-options':''}" role="group" aria-labelledby="question-title">${item.order.map((n,i)=>`<button class="option ${item.selected===n?'selected':''} ${item.checked&&isCorrect(q,n)?'correct':''} ${item.checked&&item.selected===n&&!isCorrect(q,n)?'wrong':''}" data-action="choose" data-value="${n}" aria-pressed="${item.selected===n}" ${item.checked?'disabled':''}><span class="num">${i+1}</span><span>${esc(q.options[n])}</span>${item.checked&&isCorrect(q,n)?'<span class="answer-icon">✓</span>':''}</button>`).join('')}</div>
   <div class="quiz-tools"><label class="check"><input id="unsure" type="checkbox" ${item.unsure?'checked':''} ${item.checked?'disabled':''}> 맞혀도 헷갈려요</label><div class="flex"><button class="bookmark ${progress(q.id).bookmark?'on':''}" data-action="bookmark">${progress(q.id).bookmark?'★ 저장됨':'☆ 핵심 노트에 저장'}</button>${s.mode==='exam'?`<button class="bookmark ${item.flag?'on':''}" data-action="flag">${item.flag?'⚑ 표시됨':'⚐ 나중에 검토'}</button>`:''}</div></div>
-  ${item.checked?explanation(q,isCorrect(q,item.selected),item.unsure):''}
+  ${item.checked?explanation(q,isCorrect(q,item.selected),item.unsure)+(s.focus?focusExplanation(q):''):''}
   <div class="quiz-nav">${button('← 이전','previous',s.index===0?'disabled':'','secondary')}<span class="small muted">${answered} / ${s.items.length} ${s.mode==='exam'?'선택':'채점'}</span>${s.mode==='practice'&&!item.checked?button('정답 확인','check',item.selected===null?'disabled':''):button(s.index===s.items.length-1?'결과 보기 →':'다음 문제 →',s.index===s.items.length-1?'finish':'next')}</div>
-  </section><aside class="quiz-aside"><div class="panel"><h3>${s.mode==='exam'?'남은 시간':'학습 진행'}</h3>${s.mode==='exam'?'<div class="timer" id="timer"></div>':`<p class="small" style="margin-top:7px">${answered}문항 채점 · ${s.items.length-answered}문항 남음</p>${bar(pct(answered,s.items.length))}`}<div class="answer-map" aria-label="문항 이동">${s.items.map((it,i)=>`<button class="map-btn ${(s.mode==='exam'?it.selected!==null:it.checked)?'answered':''} ${i===s.index?'current':''} ${it.flag?'flagged':''} ${it.checked&&!isCorrect(BY_ID[it.id],it.selected)?'miss':''}" data-action="jump" data-index="${i}" aria-label="${i+1}번${it.checked?' 채점 완료':it.selected!==null?' 선택 완료':''}${it.flag?' 검토 표시':''}" ${i===s.index?'aria-current="step"':''}>${i+1}</button>`).join('')}</div><p class="small muted">초록: ${s.mode==='exam'?'답 선택':'채점 완료'}${s.mode==='exam'?' · 점: 검토 표시':' · 빨강: 오답'}</p><div style="margin-top:18px">${button(s.mode==='exam'?'답안 제출하기':'여기까지 학습 완료','finish','','secondary')}</div><a class="text-link" style="display:block;margin-top:13px" href="#home">${s.mode==='exam'?'대시보드로 (시간은 계속 흐름)':'잠시 쉬기 · 자동 저장'}</a><p class="keyboard-tip">1–4 보기 선택<br>Enter 채점 / 다음 · ← → 문항 이동<br>${s.mode==='practice'?'틀린 문제는 몇 문제 뒤 1회 재등장하며, 추가 회독은 복습에서 진행합니다.':'미응답은 오답으로 채점됩니다(모두 정답 문항 제외).'}</p></div></aside></div>`;
+  </section><aside class="quiz-aside"><div class="panel"><h3>${s.mode==='exam'||s.focus?'남은 시간':'학습 진행'}</h3>${s.mode==='exam'||s.focus?'<div class="timer" id="timer"></div>':`<p class="small" style="margin-top:7px">${answered}문항 채점 · ${s.items.length-answered}문항 남음</p>${bar(pct(answered,s.items.length))}`}<div class="answer-map" aria-label="문항 이동">${s.items.map((it,i)=>`<button class="map-btn ${(s.mode==='exam'?it.selected!==null:it.checked)?'answered':''} ${i===s.index?'current':''} ${it.flag?'flagged':''} ${it.checked&&!isCorrect(BY_ID[it.id],it.selected)?'miss':''}" data-action="jump" data-index="${i}" aria-label="${i+1}번${it.checked?' 채점 완료':it.selected!==null?' 선택 완료':''}${it.flag?' 검토 표시':''}" ${i===s.index?'aria-current="step"':''}>${i+1}</button>`).join('')}</div><p class="small muted">초록: ${s.mode==='exam'?'답 선택':'채점 완료'}${s.mode==='exam'?' · 점: 검토 표시':' · 빨강: 오답'}</p><div style="margin-top:18px">${button(s.mode==='exam'?'답안 제출하기':'여기까지 학습 완료','finish','','secondary')}</div><a class="text-link" style="display:block;margin-top:13px" href="#home">${s.mode==='exam'||s.focus?'대시보드로 (시간은 계속 흐름)':'잠시 쉬기 · 자동 저장'}</a><p class="keyboard-tip">1–4 보기 선택<br>Enter 채점 / 다음 · ← → 문항 이동<br>${s.focus?'보기를 누르면 즉시 채점합니다. 오답·헷갈림을 반복하고 다른 문제도 섞습니다. 1시간 후 자동 종료합니다.':s.mode==='practice'?'틀린 문제는 몇 문제 뒤 1회 재등장하며, 추가 회독은 복습에서 진행합니다.':'미응답은 오답으로 채점됩니다(모두 정답 문항 제외).'}</p></div></aside></div>`;
   if(scroll)window.scrollTo(0,0);updateTimer();
 }
 function explanation(q,correct=true,unsure=false){
@@ -277,7 +299,7 @@ function pastExams(year){
 }
 function exam(){main.innerHTML=heading('실전처럼 풀고, 준비 상태를 확인하세요.','한 세트 80문항. 답은 자유롭게 수정하고, 모든 해설은 제출한 뒤 확인합니다.')+`
   <div class="callout">연도별 기출을 찾고 있나요? <a class="text-link" href="#past">2020년 이후 기출 회차 보기 →</a></div>
-  <section class="hero"><div><span class="eyebrow">THE FINAL REHEARSAL</span><h2>100분, 80개의 질문.<br><em>지금 알고 있는 것을 꺼낼 시간.</em></h2><p>운영 및 관리 48문항 + 활용 32문항으로 구성한 연습 세트</p><div class="hero-actions">${button('모의고사 시작 →','start-exam','','lime')}${activeSession()&&isExam()?button('진행 중인 시험 이어서','resume','','ghost'):''}</div></div><div class="hero-art"><div class="orbit"><b>80</b></div><span class="art-note last">100:00 remaining</span></div></section>
+  <section class="hero"><div><span class="eyebrow">THE FINAL REHEARSAL</span><h2>100분, 80개의 질문.<br><em>지금 알고 있는 것을 꺼낼 시간.</em></h2><p>운영 및 관리 48문항 + 활용 32문항으로 구성한 연습 세트</p><div class="hero-actions">${button('모의고사 시작 →','start-exam','','lime')}${activeSession()&&(isExam()||state.session.focus)?button('진행 중인 시험 이어서','resume','','ghost'):''}</div></div><div class="hero-art"><div class="orbit"><b>80</b></div><span class="art-note last">100:00 remaining</span></div></section>
   <section class="stats">${stat('문항 수','80','문항','객관식 4지선다')}${stat('제한 시간','100','분','시간 종료 시 자동 제출')}${stat('총점 기준','60','점 이상','80문항 중 48문항 이상 정답')}${stat('과목별 기준','40','% 이상','운영·관리 20개 / 활용 13개 이상')}</section>
   <div class="callout">문제 세트는 9개 단원에서 나누어 추출하며 매번 보기를 섞습니다. 대시보드로 이동하거나 새로고침해도 시험 시간은 계속 흐릅니다. 브라우저를 닫았다가 돌아왔을 때 시간이 지났으면 자동 채점합니다.</div><div class="panel"><h2>모의고사 기록</h2>${state.history.filter(h=>h.mode==='exam').length?state.history.filter(h=>h.mode==='exam').map(h=>`<div class="history-row"><span>${dateLabel(h.at)} · ${esc(h.label)}</span><span>${h.correct} / ${h.total} 정답 · <strong>${Number(h.score.toFixed(2))}점</strong> ${historyLink(h)}</span></div>`).join(''):'<p class="small" style="margin-top:15px">아직 응시 기록이 없습니다. 첫 시험으로 학습의 기준점을 만들어 보세요.</p>'}</div>`;}
 
@@ -314,7 +336,7 @@ function notes(){
   const saved=location.hash==='#notes/saved',cs=filteredConcepts();
   const pages=Math.max(1,Math.ceil(cs.length/10));notePage=Math.max(0,Math.min(notePage,pages-1));
   main.innerHTML=heading(saved?'저장한 문제가 있는 개념':'반복 문제를 하나의 개념으로',`${ALL_QUESTIONS.length.toLocaleString()}개 문제를 ${CONCEPTS.length}개 개념으로 정리했습니다. 설명 → 비교 → 예제를 읽고 관련 문제로 확인하세요.`, `<a class="btn secondary small" href="${saved?'#notes':'#notes/saved'}">${saved?'전체 개념':'★ 저장한 문제의 개념'}</a>`)+`
-  <div class="searchbar"><input type="search" id="note-search" placeholder="df, bash_profile, 서브넷…" aria-label="핵심 노트 검색" value="${esc(noteQuery)}"><select id="note-topic" aria-label="노트 단원"><option value="all">전체 단원</option>${TOPICS.map(t=>`<option value="${t.id}" ${noteTopic===t.id?'selected':''}>${t.name}</option>`).join('')}</select><label class="check"><input id="note-red" type="checkbox" ${noteRed?'checked':''}>빨간 핵심</label><label class="check"><input id="note-wrong" type="checkbox" ${noteWrong?'checked':''}>오답 있는 개념</label></div>
+  <div class="callout"><strong>1시간 집중 학습</strong><p>현재 검색·단원 조건에서 오답이 많은 개념을 우선해 최대 6개를 반복합니다. 한 문제마다 즉시 정답과 설명을 확인합니다. 시간은 화면을 떠나도 계속 흐릅니다.</p>${button('1시간 집중 학습 시작','start-focus')}</div><div class="searchbar"><input type="search" id="note-search" placeholder="df, bash_profile, 서브넷…" aria-label="핵심 노트 검색" value="${esc(noteQuery)}"><select id="note-topic" aria-label="노트 단원"><option value="all">전체 단원</option>${TOPICS.map(t=>`<option value="${t.id}" ${noteTopic===t.id?'selected':''}>${t.name}</option>`).join('')}</select><label class="check"><input id="note-red" type="checkbox" ${noteRed?'checked':''}>빨간 핵심</label><label class="check"><input id="note-wrong" type="checkbox" ${noteWrong?'checked':''}>오답 있는 개념</label></div>
   <div class="section-heading"><span class="text-link">${cs.length}개 개념 · ${notePage+1} / ${pages}페이지</span>${saved&&cs.length?button('저장한 문제 풀기','start-saved','','small'):''}</div>
   <div class="note-list">${cs.length?cs.slice(notePage*10,notePage*10+10).map(c=>{
     const qs=conceptQuestions(c),wrong=qs.filter(q=>progress(q.id).wrong).length;
@@ -331,7 +353,7 @@ function about(){main.innerHTML=heading('자료와 학습 안내','학습 기준
 function syncPage(){if(window.STATIC_CBT){about();return;}main.innerHTML=heading('학습 동기화','다른 브라우저와 기록을 연결하고, 풀던 문제를 이어서 학습하세요.')+(typeof Sync!=='undefined'?Sync.panel():`<section class="panel"><p>동기화 기능을 불러오는 중입니다. 이 안내가 계속 보이면 페이지를 새로고침해 주세요.</p><a class="btn secondary" href="?v=20260910#sync">최신 화면 다시 열기</a></section>`);}
 
 function updateBadges(){document.getElementById('review-count').textContent=ALL_QUESTIONS.filter(reviewable).length;}
-function updateTimer(){const s=state.session;if(!s||s.finished||s.mode!=='exam')return;const left=Math.max(0,Math.ceil((s.deadline-Date.now())/1000));const el=document.getElementById('timer');if(el){el.textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;el.classList.toggle('urgent',left<300);}if(!left)finish(true);}
+function updateTimer(){const s=state.session;if(!s||s.finished||(s.mode!=='exam'&&!s.focus))return;const left=Math.max(0,Math.ceil((s.deadline-Date.now())/1000));const el=document.getElementById('timer');if(el){el.textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;el.classList.toggle('urgent',left<300);}if(!left)finish(true);}
 function render(){
   clearInterval(timerHandle);
   const route=(location.hash.slice(1)||'home').split('/'),name=route[0];
@@ -340,7 +362,7 @@ function render(){
   document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('active',a.dataset.nav===(name==='session'?(isExam()?(state.session.examDate?'past':'exam'):'learn'):name)));
   if(name==='home')home();else if(name==='learn')learn(route[1]);else if(name==='review')review();else if(name==='exam')exam();else if(name==='past')pastExams(route[1]);else if(name==='notes')notes();else if(name==='plan')plan();else if(name==='session')renderQuiz();else if(name==='history')historyPage(route[1],route[2]);else if(name==='sync')syncPage();else if(name==='about')about();else home();
   updateBadges();showStorageWarning();window.scrollTo(0,0);
-  if(activeSession()&&isExam()){updateTimer();timerHandle=setInterval(updateTimer,1000);}
+  if(activeSession()&&(isExam()||state.session.focus)){updateTimer();timerHandle=setInterval(updateTimer,1000);}
 }
 
 document.addEventListener('click',event=>{
@@ -372,6 +394,7 @@ document.addEventListener('click',event=>{
     case 'bookmark-note':{toggleBookmark(el.dataset.id);el.textContent=progress(el.dataset.id).bookmark?'★ 저장됨':'☆ 저장';el.classList.toggle('on',progress(el.dataset.id).bookmark);break;}
     case 'flag':s.items[s.index].flag=!s.items[s.index].flag;save();renderQuiz(false);break;
     case 'retry-result':{const ids=[...new Set(s.items.filter(i=>i.checked&&(!isCorrect(BY_ID[i.id],i.selected)||i.unsure)).map(i=>i.id))];start(ids.map(id=>BY_ID[id]),'이번 오답 재도전','practice','all');break;}
+    case 'start-focus':startFocus();break;
     case 'start-concept':startConcept(el.dataset.id);break;
     case 'notes-prev':notePage--;notes();window.scrollTo(0,0);break;
     case 'notes-next':notePage++;notes();window.scrollTo(0,0);break;
