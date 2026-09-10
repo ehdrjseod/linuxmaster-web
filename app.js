@@ -156,12 +156,13 @@ function learn(topic='all'){
 function ranked(qs){return shuffle(qs).sort((a,b)=>priority(a)-priority(b));}
 function priority(q){const p=progress(q.id);return p.wrong||p.unsure?0:p.attempts&&p.due<=Date.now()?1:!p.attempts?2:p.streak<3?3:4;}
 function makeItem(q,retry=false){return {id:q.id,order:shuffle([0,1,2,3]),selected:null,checked:false,unsure:false,flag:false,retry};}
-function start(qs,label,mode='practice',count=20){
+function start(qs,label,mode='practice',count=20,focus=null){
   if(!qs.length){toast('조건에 맞는 문제가 없습니다. 다른 단원이나 조건을 선택해 주세요.');return;}
   if(activeSession()&&!confirm('새 학습을 시작하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 학습 기록은 유지됩니다. 새로 시작할까요?'))return;
   recoverLastArchive();
   const picked=mode==='exam'?qs:ranked(qs).slice(0,count==='all'?qs.length:Number(count));
   state.session={syncId:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),mode,label,examDate:mode==='exam'?(picked[0].examDate||null):null,started:Date.now(),deadline:mode==='exam'?Date.now()+100*MINUTE:0,index:0,items:picked.map(q=>makeItem(q)),finished:false,applied:{}};
+  if(focus){state.session.focus=focus;state.session.deadline=Date.now()+HOUR;state.session.items.forEach(i=>i.attemptId=cryptoId());}
   save();go('session');
 }
 function startPastExam(date){
@@ -186,15 +187,14 @@ function applyResult(q,correct,unsure){
   state.progress[q.id]=p;
   if(typeof Sync!=='undefined')Sync.graded(q,p,correct);
 }
+function cryptoId(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);}
+function focusItem(q){return {...makeItem(q,true),attemptId:cryptoId()};}
 function startFocus(){
   const candidates=filteredConcepts();
   if(!candidates.length){toast('학습할 개념이 없습니다. 필터를 바꿔 주세요.');return;}
   const selected=[...candidates].sort((a,b)=>conceptQuestions(b).filter(q=>progress(q.id).wrong||progress(q.id).unsure).length-conceptQuestions(a).filter(q=>progress(q.id).wrong||progress(q.id).unsure).length).slice(0,6);
   const pool=selected.flatMap(c=>conceptQuestions(c));
-  const old=state.session;start(pool,'1시간 집중 학습','practice',Math.min(18,pool.length));
-  if(state.session===old)return;
-  state.session.focus={conceptIds:selected.map(c=>c.id)};
-  state.session.deadline=Date.now()+HOUR;save();render();
+  start(pool,'1시간 집중 학습','practice',Math.min(18,pool.length),{conceptIds:selected.map(c=>c.id)});
 }
 function focusConcept(q){return CONCEPTS.find(c=>c.questionIds.includes(q.id));}
 function focusExplanation(q){const c=focusConcept(q);return c?`<div class="memory"><h3>${esc(c.title)}</h3><p>${esc(c.summary)}</p><p><strong>예제:</strong> ${esc(c.example)}</p><p><strong>주의:</strong> ${esc(c.pitfall)}</p></div>`:'';}
@@ -204,7 +204,7 @@ function extendFocus(){
   const recent=new Set(s.items.slice(-3).map(i=>i.id));
   const counts=id=>s.items.filter(i=>i.id===id).length;
   const qs=shuffle(pool).sort((a,b)=>Number(recent.has(a.id))-Number(recent.has(b.id))||priority(a)-priority(b)||counts(a.id)-counts(b.id));
-  s.items.push(...qs.slice(0,Math.min(6,990-s.items.length)).map(q=>makeItem(q,true)));
+  s.items.push(...qs.slice(0,Math.min(6,990-s.items.length)).map(q=>focusItem(q)));
 }
 function choose(index){
   const s=state.session;if(!s||s.finished)return;
@@ -218,7 +218,7 @@ function check(){
   const q=BY_ID[item.id],correct=isCorrect(q,item.selected);
   item.checked=true;applyResult(q,correct,item.unsure);
   if((!correct||item.unsure)&&(!item.retry||s.focus)&&s.items.length<990&&!s.items.some((it,i)=>i>s.index&&it.id===q.id)){
-    s.items.splice(Math.min(s.index+4,s.items.length),0,makeItem(q,true));
+    s.items.splice(Math.min(s.index+4,s.items.length),0,s.focus?focusItem(q):makeItem(q,true));
   }
   if(s.focus&&s.items.length-s.index<4)extendFocus();
   save();renderQuiz(false);updateBadges();
