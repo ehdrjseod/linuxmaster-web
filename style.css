@@ -36,3 +36,14 @@
 .sync-shortcut{margin-left:auto;white-space:nowrap;padding:7px 11px;border-radius:8px;background:#edf3e9;color:var(--green);font-weight:700;font-size:13px}.topbar{gap:12px}@media(max-width:620px){.topbar .top-tag{display:none}.sync-shortcut{font-size:12px;padding:6px 9px}.sidebar nav{flex-wrap:wrap}}
 
 .history-tools{flex-wrap:wrap;margin:18px 0}.history-row{gap:14px;flex-wrap:wrap}.history-row .btn{white-space:nowrap}
+
+.concept-note > summary {flex-wrap:wrap;gap:10px}
+.concept-count {font-size:.8rem;color:var(--muted);white-space:nowrap}
+.concept-table {width:100%;border-collapse:collapse;margin:18px 0;font-size:.92rem}
+.concept-table caption {text-align:left;font-weight:700;margin-bottom:8px}
+.concept-table th,.concept-table td {text-align:left;vertical-align:top;padding:10px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.concept-table th {width:30%}
+.concept-example {white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;padding:16px;background:var(--bg);border-radius:10px;line-height:1.8}
+.concept-related {margin-top:18px}
+.concept-related > details {margin:12px 0;border-top:1px solid var(--line);padding-top:12px}
+.concept-related summary {overflow-wrap:anywhere}

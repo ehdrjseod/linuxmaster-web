@@ -1,6 +1,7 @@
 /* Offline CBT: no server, analytics, account, or external dependencies. */
 'use strict';
 const BANK = window.QUESTION_BANK;
+const CONCEPTS = window.CONCEPT_NOTES.concepts;
 const QUESTIONS = BANK.questions;
 const TOPICS = BANK.topics;
 const PAST_BANK = window.PAST_EXAM_BANK;
@@ -40,7 +41,7 @@ let storageOK = true;
 let state;
 try { state = validateState(JSON.parse(localStorage.getItem(KEY))) || freshState(); }
 catch { state = freshState(); storageOK = false; }
-let notePage = 0, noteQuery = '', noteTopic = 'all', noteRed = false;
+let notePage = 0, noteQuery = '', noteTopic = 'all', noteRed = false, noteWrong = false;
 let timerHandle = null, toastHandle = null;
 const main = document.getElementById('main');
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -300,14 +301,27 @@ const PLAN=[
 ];
 function plan(){main.innerHTML=heading('2일 집중 학습 플랜','하루 약 6시간을 기준으로 구성했습니다. 이미 익숙한 단원은 줄이고 취약 단원에 시간을 더 쓰세요.')+`<div class="callout">한 블록을 끝내면 10분 정도 쉬세요. 이틀 만의 완전한 습득을 보장하는 일정은 아닙니다. 목표는 전 범위 1회독 → 핵심·오답 반복 → 실전 점검이며, 모르는 개념을 설명할 수 있는지가 기준입니다.</div><section class="plan-grid">${PLAN.map(day=>`<article class="plan-day"><span class="eyebrow" style="color:var(--green)">DAY 0${day.day} · ${day.hours}</span><h2>${day.title}</h2><p>${day.day===1?'정답률보다 전체를 한 번 경험하는 데 집중합니다.':'맞힌 이유와 틀린 이유를 말로 설명해 봅니다.'}</p>${day.steps.map((step,i)=>{const id=`d${day.day}-${i}`;return `<div class="plan-step ${state.plan[id]?'done':''}"><input type="checkbox" id="${id}" data-plan="${id}" ${state.plan[id]?'checked':''}><div><label for="${id}">${step[0]}</label><p>${step[1]}</p>${button('학습 열기 →','plan-start',`data-day="${day.day}" data-step="${i}"`,'small secondary')}</div></div>`;}).join('')}</article>`).join('')}</section>`;}
 
+function conceptQuestions(c){return c.questionIds.map(id=>BY_ID[id]);}
+function filteredConcepts(){
+  const saved=location.hash==='#notes/saved',query=noteQuery.toLowerCase().trim();
+  return CONCEPTS.filter(c=>{
+    const qs=conceptQuestions(c);
+    return (!saved||qs.some(q=>progress(q.id).bookmark))&&(noteTopic==='all'||c.topic===noteTopic)&&(!noteRed||qs.some(q=>q.red))&&(!noteWrong||qs.some(q=>progress(q.id).wrong))&&(!query||`${c.title} ${c.summary} ${c.example} ${c.pitfall} ${c.comparison.flat().join(' ')} ${qs.map(q=>q.prompt+' '+answerLabel(q)).join(' ')}`.toLowerCase().includes(query));
+  });
+}
+function startConcept(id){const c=CONCEPTS.find(c=>c.id===id);if(c)start(conceptQuestions(c),c.title,'practice','all');}
 function notes(){
-  const saved=location.hash==='#notes/saved';
-  const query=noteQuery.toLowerCase().trim();
-  const qs=ALL_QUESTIONS.filter(q=>(!saved||progress(q.id).bookmark)&&(noteTopic==='all'||q.topic===noteTopic)&&(!noteRed||q.red)&&(!query||`${q.prompt} ${q.options[q.answer]} ${q.memory}`.toLowerCase().includes(query)));
-  const pages=Math.max(1,Math.ceil(qs.length/15));notePage=Math.min(notePage,pages-1);
-  main.innerHTML=heading(saved?'내가 저장한 핵심 노트':'답을 가리고, 한 줄로 기억하세요.','먼저 질문에 답해 본 뒤 노트를 펼쳐 확인하세요. 빨간 표시는 원본 강조와 연결된 내용입니다.',`<a class="btn secondary small" href="${saved?'#notes':'#notes/saved'}">${saved?'전체 노트':'★ 저장한 노트'}</a>`)+`
-  <div class="searchbar"><input type="search" id="note-search" placeholder="명령어, 개념, 암기 포인트 검색…" aria-label="핵심 노트 검색" value="${esc(noteQuery)}"><select id="note-topic" aria-label="노트 단원"><option value="all">전체 단원</option>${NOTE_TOPICS.map(t=>`<option value="${t.id}" ${noteTopic===t.id?'selected':''}>${t.name}</option>`).join('')}</select><label class="check"><input id="note-red" type="checkbox" ${noteRed?'checked':''}>빨간 핵심</label></div><div class="section-heading"><span class="text-link">${qs.length}개 노트 · ${notePage+1} / ${pages}페이지</span>${saved&&qs.length?button('저장한 문제 풀기','start-saved','','small'):''}</div>
-  <div class="note-list">${qs.length?qs.slice(notePage*15,notePage*15+15).map(q=>`<details><summary>${q.red?'<span class="pill red">핵심</span>':'<span class="pill outline">개념</span>'}<h3>${esc(q.prompt)}</h3></summary><div class="note-answer">${esc(answerLabel(q))}</div>${q.examDate?questionImages(q)+explanation(q):`<p>${esc(q.explanation)}</p><div class="memory">${esc(q.memory)}</div>`}<div class="flex between">${sourceLink(q)}<button class="bookmark ${progress(q.id).bookmark?'on':''}" data-action="bookmark-note" data-id="${q.id}">${progress(q.id).bookmark?'★ 저장됨':'☆ 저장'}</button></div></details>`).join(''):'<div class="empty"><h2>해당하는 노트가 없습니다.</h2><p>검색 조건을 바꾸거나 문제 화면에서 별표를 눌러 저장해 보세요.</p></div>'}</div><div class="pagination">${button('← 이전','notes-prev',notePage===0?'disabled':'','secondary small')}${button('다음 →','notes-next',notePage===pages-1?'disabled':'','secondary small')}</div>`;
+  const saved=location.hash==='#notes/saved',cs=filteredConcepts();
+  const pages=Math.max(1,Math.ceil(cs.length/10));notePage=Math.max(0,Math.min(notePage,pages-1));
+  main.innerHTML=heading(saved?'저장한 문제가 있는 개념':'반복 문제를 하나의 개념으로',`${ALL_QUESTIONS.length.toLocaleString()}개 문제를 ${CONCEPTS.length}개 개념으로 정리했습니다. 설명 → 비교 → 예제를 읽고 관련 문제로 확인하세요.`, `<a class="btn secondary small" href="${saved?'#notes':'#notes/saved'}">${saved?'전체 개념':'★ 저장한 문제의 개념'}</a>`)+`
+  <div class="searchbar"><input type="search" id="note-search" placeholder="df, bash_profile, 서브넷…" aria-label="핵심 노트 검색" value="${esc(noteQuery)}"><select id="note-topic" aria-label="노트 단원"><option value="all">전체 단원</option>${TOPICS.map(t=>`<option value="${t.id}" ${noteTopic===t.id?'selected':''}>${t.name}</option>`).join('')}</select><label class="check"><input id="note-red" type="checkbox" ${noteRed?'checked':''}>빨간 핵심</label><label class="check"><input id="note-wrong" type="checkbox" ${noteWrong?'checked':''}>오답 있는 개념</label></div>
+  <div class="section-heading"><span class="text-link">${cs.length}개 개념 · ${notePage+1} / ${pages}페이지</span>${saved&&cs.length?button('저장한 문제 풀기','start-saved','','small'):''}</div>
+  <div class="note-list">${cs.length?cs.slice(notePage*10,notePage*10+10).map(c=>{
+    const qs=conceptQuestions(c),wrong=qs.filter(q=>progress(q.id).wrong).length;
+    return `<details class="concept-note"><summary><span class="pill outline">${esc(TOPIC[c.topic].name)}</span><h3>${esc(c.title)}</h3><span class="concept-count">관련 ${qs.length}문제${wrong?` · 오답 ${wrong}`:''}</span></summary><p>${esc(c.summary)}</p><table class="concept-table"><caption>핵심 비교</caption><tbody>${c.comparison.map(([k,v])=>`<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table><h4>예제로 이해하기</h4><pre class="concept-example">${esc(c.example)}</pre><div class="memory"><strong>헷갈리기 쉬운 점</strong><p>${esc(c.pitfall)}</p></div><p class="muted">기출의 반복 출제 내용을 바탕으로 새로 작성한 개념 설명입니다. 개별 문제의 원본 해설과 검토 내용은 아래에서 확인하세요.</p>${button('이 개념 문제 풀기','start-concept',`data-id="${c.id}"`,'small')}
+    <details class="concept-related"><summary>관련 문제 ${qs.length}개 보기</summary>${qs.map(q=>`<details><summary>${esc(q.examDate?`${q.examDate} · ${q.number}번`:`연습 ${q.id}`)} · ${esc(q.prompt)}</summary>${questionImages(q)}<div class="note-answer">${esc(answerLabel(q))}</div>${q.examDate?explanation(q):`<p>${esc(q.explanation)}</p>`}<div class="flex between">${sourceLink(q)}<button class="bookmark ${progress(q.id).bookmark?'on':''}" data-action="bookmark-note" data-id="${q.id}">${progress(q.id).bookmark?'★ 저장됨':'☆ 저장'}</button></div></details>`).join('')}</details></details>`;
+  }).join(''):'<div class="empty"><h2>해당하는 개념이 없습니다.</h2><p>검색 조건을 바꾸거나 문제를 별표로 저장해 보세요.</p></div>'}</div>
+  <div class="pagination">${button('← 이전','notes-prev',notePage===0?'disabled':'','secondary small')}${button('다음 →','notes-next',notePage===pages-1?'disabled':'','secondary small')}</div>`;
 }
 function about(){main.innerHTML=heading('자료와 학습 안내','학습 기준, 정리본의 보완 사항, 기록 관리 방법을 확인하세요.')+`<div class="about"><section class="panel"><h2>이 CBT의 구성</h2><p>제공한 「리눅스마스터 2급 2차」 PDF의 5–23쪽을 바탕으로 만든 자체 연습문제 ${QUESTIONS.length}개입니다. 별도로 제공받은 2020~2023년 기출 해설집 12회차, 960문항은 기출 회차 메뉴에서 응시할 수 있습니다. 기출의 문제와 선택지는 텍스트로 표시하고, 삽입된 참고 자료는 이미지로 보존합니다. 새 시험마다 보기를 섞습니다. ${QUESTIONS.filter(q=>q.red).length}개는 PDF의 빨간 강조와 연결된 개념이며, 계산 변형 문제는 46개입니다. 표지·목차·안내 페이지는 출제하지 않았습니다. 모든 문항에 정답 근거, 비교 설명, 한 줄 암기 포인트와 원본 쪽수를 연결했습니다.</p><p>첫날은 9개 단원을 모두 경험하고, 둘째 날은 지연 복습과 모의고사에 집중하도록 설계했습니다. 학습 완료 문항은 한 번 이상 채점한 고유 문항 수이며, ‘암기 완료’는 정답 1단계 후 30분, 2단계 후 8시간 간격을 통과한 3단계 문항입니다. 3단계도 24시간 뒤 다시 복습합니다.</p><p>정리본 기반 자체 연습문제에는 그림 식별 유형이 없어 정리본 17쪽의 이미지도 함께 확인하세요.</p></section>
   <section class="panel"><h2>시험 형식과 판정</h2><p><a href="https://www.ihd.or.kr/introducesubject1.do" target="_blank" rel="noopener">KAIT 공식 종목 안내</a>에서 2급 2차 80문항·100분, 총점 60점 이상·과목별 40% 미만 과락 기준을 확인했습니다(2026-09-08). 이 연습 세트는 운영 및 관리 48문항, 활용 32문항으로 구성합니다. 자체 제작 모의고사와 사용자 제공 기출시험은 구분해서 제공합니다. 기출시험은 원본 정답표와 문항 내 정정 안내를 기준으로 채점하며, 확인된 해설 오류는 보완 해설로 표시합니다.</p></section>
@@ -358,6 +372,7 @@ document.addEventListener('click',event=>{
     case 'bookmark-note':{toggleBookmark(el.dataset.id);el.textContent=progress(el.dataset.id).bookmark?'★ 저장됨':'☆ 저장';el.classList.toggle('on',progress(el.dataset.id).bookmark);break;}
     case 'flag':s.items[s.index].flag=!s.items[s.index].flag;save();renderQuiz(false);break;
     case 'retry-result':{const ids=[...new Set(s.items.filter(i=>i.checked&&(!isCorrect(BY_ID[i.id],i.selected)||i.unsure)).map(i=>i.id))];start(ids.map(id=>BY_ID[id]),'이번 오답 재도전','practice','all');break;}
+    case 'start-concept':startConcept(el.dataset.id);break;
     case 'notes-prev':notePage--;notes();window.scrollTo(0,0);break;
     case 'notes-next':notePage++;notes();window.scrollTo(0,0);break;
     case 'plan-start':{const step=PLAN[Number(el.dataset.day)-1].steps[Number(el.dataset.step)];const target=step[2];if(Array.isArray(target))start(QUESTIONS.filter(q=>target.includes(q.topic)),step[0],'practice','all');else if(target==='exam')go('exam');else if(target==='review')go('review');else if(target==='saved')go('notes/saved');else start(QUESTIONS.filter(q=>target==='core'?q.red:q.kind==='계산'),step[0],'practice',target==='core'?20:'all');break;}
@@ -371,6 +386,7 @@ document.addEventListener('change',event=>{
   if(el.id==='unsure'&&activeSession()){state.session.items[state.session.index].unsure=el.checked;save();}
   if(el.dataset.plan){state.plan[el.dataset.plan]=el.checked;save();el.closest('.plan-step').classList.toggle('done',el.checked);}
   if(el.id==='note-topic'){noteTopic=el.value;notePage=0;notes();}
+  if(el.id==='note-wrong'){noteWrong=el.checked;notePage=0;notes();}
   if(el.id==='note-red'){noteRed=el.checked;notePage=0;notes();}
 });
 document.addEventListener('input',event=>{if(event.target.id==='note-search'){const pos=event.target.selectionStart;noteQuery=event.target.value;notePage=0;notes();const input=document.getElementById('note-search');input.focus();try{input.setSelectionRange(pos,pos);}catch{}}});
