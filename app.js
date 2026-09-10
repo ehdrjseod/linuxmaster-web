@@ -73,6 +73,9 @@ function validateState(value){
   if(!Array.isArray(value.history) || value.history.length>500 || !value.plan || typeof value.plan!=='object' || Array.isArray(value.plan))return null;
   if(Object.entries(value.plan).some(([k,v])=>!/^d[12]-[0-5]$/.test(k)||typeof v!=='boolean'))return null;
   for(const h of value.history){if(!h || !validNum(h.at) || !validNum(h.score) || !validNum(h.total) || !validNum(h.correct) || typeof h.label!=='string' || h.label.length>100 || !['exam','practice'].includes(h.mode))return null;}
+  for(const h of value.history){
+    if(h.items!==undefined && (!Array.isArray(h.items)||h.items.length>1000||!h.items.every(validArchivedItem)))return null;
+  }
   const s=value.session;
   if(s){
     if(!['exam','practice'].includes(s.mode) || typeof s.label!=='string'||s.label.length>100||!Array.isArray(s.items)||!s.items.length||s.items.length>1000||!Number.isInteger(s.index)||s.index<0||s.index>=s.items.length||!validNum(s.started)||!validNum(s.deadline)||typeof s.finished!=='boolean')return null;
@@ -86,6 +89,42 @@ function validateState(value){
     if(s.examDate && (!PAST_BANK.exams.some(e=>e.date===s.examDate)||s.items.some(i=>BY_ID[i.id].examDate!==s.examDate)))return null;
   }
   return {version:1,created:validNum(value.created)?value.created:Date.now(),progress:value.progress,history:value.history,plan:value.plan,session:s||null};
+}
+
+function validArchivedItem(it){
+  return !!it&&!!BY_ID[it.id]&&Array.isArray(it.order)&&it.order.length===4&&new Set(it.order).size===4&&it.order.every(n=>Number.isInteger(n)&&n>=0&&n<4)
+    &&(it.selected===null||(Number.isInteger(it.selected)&&it.selected>=0&&it.selected<4))
+    &&['checked','unsure','correct'].every(k=>typeof it[k]==='boolean')
+    &&Array.isArray(it.answers)&&it.answers.length>0&&it.answers.every(n=>Number.isInteger(n)&&n>=0&&n<4);
+}
+function archiveItems(s){return s.items.map(it=>({id:it.id,order:[...it.order],selected:it.selected,checked:it.checked,unsure:it.unsure,
+  correct:it.checked&&isCorrect(BY_ID[it.id],it.selected),answers:[0,1,2,3].filter(n=>isCorrect(BY_ID[it.id],n))}));}
+function recoverLastArchive(){
+  const s=state.session;if(!s?.finished)return false;
+  const h=state.history.find(h=>h.sessionId===String(s.syncId||s.started)||(h.at===s.ended&&h.label===s.label));
+  if(!h||h.items)return false;h.items=archiveItems(s);return true;
+}
+function historyKey(h){return encodeURIComponent(h.sessionId||`${h.at}-${h.label}`);}
+function storedHistory(key){return state.history.find(h=>historyKey(h)===key);}
+function historyLink(h){return `<a class="btn secondary small" href="#history/${historyKey(h)}">${h.items?'오답 · 답안 보기':'점수 기록 보기'}</a>`;}
+function historyPage(key,filter){
+  const h=key?storedHistory(key):null;
+  if(key&&!h){main.innerHTML=heading('기록을 찾을 수 없습니다.','다른 브라우저의 기록인지 확인해 주세요.')+'<a class="btn" href="#history">풀이 기록으로</a>';return;}
+  if(!h){
+    main.innerHTML=heading('풀이 기록','다시 풀어도 이전 오답과 선택한 답이 남습니다. 최근 100개 완료 기록을 보관합니다.')+
+      '<div class="callout">오답 목록은 이후에 맞혀도 당시 기록 그대로 보관됩니다. 업데이트 전 이미 덮어쓴 상세 답안은 복원할 수 없습니다.</div>'+
+      (state.history.length?`<div class="panel">${state.history.map(h=>`<div class="history-row"><div><b>${esc(h.label)}</b><p class="small">${dateLabel(h.at)} · ${h.correct}/${h.total} 정답 · ${Number(h.score.toFixed(2))}점</p></div>${historyLink(h)}</div>`).join('')}</div>`:'<div class="empty"><h2>아직 완료한 풀이가 없습니다.</h2><p>시험 제출 또는 학습 완료 후 기록이 여기에 저장됩니다.</p></div>');return;
+  }
+  const wrong=(h.items||[]).filter(it=>it.checked&&!it.correct),unsure=(h.items||[]).filter(it=>it.checked&&it.unsure);
+  const selected=(h.items||[]).map((it,index)=>({it,index})).filter(({it})=>filter==='all'||(it.checked&&(!it.correct||it.unsure)));
+  main.innerHTML=heading(h.label,`${dateLabel(h.at)} · ${h.correct}/${h.total} 정답 · ${Number(h.score.toFixed(2))}점`,'<a class="btn secondary" href="#history">전체 기록</a>')+
+    (!h.items?'<div class="callout">이 기록은 상세 답안 저장 기능을 추가하기 전에 완료되어 점수만 남아 있습니다. 앞으로 완료하는 풀이는 오답과 답안도 함께 저장됩니다.</div>':
+    `<p class="small muted">선택한 답과 채점 결과는 당시 기록입니다. 문제 해설은 현재 검토된 내용을 보여 줍니다.</p><div class="flex history-tools">${wrong.length?button(`이 시험 오답 ${wrong.length}문항 다시 풀기`,'retry-history',`data-key="${historyKey(h)}"`):'<span>이 기록에 오답이 없습니다.</span>'}${unsure.length?button('헷갈린 문제 다시 풀기','retry-history-unsure',`data-key="${historyKey(h)}"`,'secondary'):''}<a class="btn secondary" href="#history/${historyKey(h)}${filter==='all'?'':'/all'}">${filter==='all'?'오답·헷갈림만 보기':'전체 답안 보기'}</a></div>
+    <div class="result-list">${selected.map(({it,index})=>{const q=BY_ID[it.id];return `<details><summary><span class="pill ${it.checked&&!it.correct?'red':''}">${!it.checked?'미채점':!it.correct?'오답':it.unsure?'헷갈림':'정답'}</span><span>${index+1}. ${esc(q.prompt)}</span></summary><p>당시 내 선택: <strong>${it.selected===null?'미응답':`${it.order.indexOf(it.selected)+1}번 · ${esc(q.options[it.selected])}`}</strong></p><p>당시 정답: ${it.answers.map(n=>esc(q.options[n])).join(' 또는 ')}</p><details class="original-options"><summary>당시 보기 순서</summary><ol>${it.order.map(n=>`<li>${esc(q.options[n])}${it.selected===n?' ← 내 선택':''}</li>`).join('')}</ol></details>${q.examDate?questionImages(q):''}${explanation(q,it.correct,it.unsure)}</details>`;}).join('')||'<div class="empty"><p>이 기록에 오답·헷갈림 문항이 없습니다. 전체 답안에서 정답 문항을 확인할 수 있습니다.</p></div>'}</div>`);
+}
+function retryHistory(key,unsureOnly=false){const h=storedHistory(key);if(!h?.items)return;
+  const ids=[...new Set(h.items.filter(it=>it.checked&&(unsureOnly?it.unsure:!it.correct)).map(it=>it.id))];
+  start(ids.map(id=>BY_ID[id]),unsureOnly?'기록의 헷갈림 재도전':'기록의 오답 재도전','practice','all');
 }
 
 function home(){
@@ -118,8 +157,9 @@ function makeItem(q,retry=false){return {id:q.id,order:shuffle([0,1,2,3]),select
 function start(qs,label,mode='practice',count=20){
   if(!qs.length){toast('조건에 맞는 문제가 없습니다. 다른 단원이나 조건을 선택해 주세요.');return;}
   if(activeSession()&&!confirm('새 학습을 시작하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 학습 기록은 유지됩니다. 새로 시작할까요?'))return;
+  recoverLastArchive();
   const picked=mode==='exam'?qs:ranked(qs).slice(0,count==='all'?qs.length:Number(count));
-  state.session={mode,label,examDate:mode==='exam'?(picked[0].examDate||null):null,started:Date.now(),deadline:mode==='exam'?Date.now()+100*MINUTE:0,index:0,items:picked.map(q=>makeItem(q)),finished:false,applied:{}};
+  state.session={syncId:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),mode,label,examDate:mode==='exam'?(picked[0].examDate||null):null,started:Date.now(),deadline:mode==='exam'?Date.now()+100*MINUTE:0,index:0,items:picked.map(q=>makeItem(q)),finished:false,applied:{}};
   save();go('session');
 }
 function startPastExam(date){
@@ -192,7 +232,7 @@ function finish(force=false){
   if(s.mode==='exam')s.items.forEach((it,i)=>{if(!s.applied[i]){applyResult(BY_ID[it.id],isCorrect(BY_ID[it.id],it.selected),it.unsure);s.applied[i]=true;}it.checked=true;});
   s.finished=true;s.ended=Date.now();
   const checked=s.items.filter(i=>i.checked),correct=checked.filter(i=>isCorrect(BY_ID[i.id],i.selected)).length;
-  state.history.unshift({sessionId:String(s.syncId||s.started),at:s.ended,label:s.label,mode:s.mode,examDate:s.examDate||null,correct,total:checked.length,score:checked.length?correct/checked.length*100:0});state.history=state.history.slice(0,100);
+  state.history.unshift({sessionId:String(s.syncId||s.started),at:s.ended,label:s.label,mode:s.mode,examDate:s.examDate||null,correct,total:checked.length,score:checked.length?correct/checked.length*100:0,items:archiveItems(s)});state.history=state.history.slice(0,100);
   save();go('session');updateBadges();if(force)toast('제한 시간이 끝나 답안을 자동 제출했습니다.');
 }
 function renderResult(){
@@ -202,7 +242,7 @@ function renderResult(){
   const pass=score>=60&&subjects.every(x=>x.total&&x.correct/x.total>=.4);
   const wrong=checked.filter(i=>!isCorrect(BY_ID[i.id],i.selected)||i.unsure);
   main.innerHTML=heading('한 번 더, 기억에 가까워졌어요.',`${esc(s.label)} · ${dateLabel(s.ended||Date.now())}`)+`
-    <section class="result-hero"><span class="eyebrow">${s.mode==='exam'?'MOCK EXAM RESULT':'SESSION COMPLETE'}</span><div class="result-score">${checked.length?Number(score.toFixed(2)):'—'}<small> / 100</small></div><h2>${!checked.length?'채점한 문항이 없습니다.':s.mode==='exam'?(pass?'이번 연습은 합격 기준 충족':'취약한 개념을 한 번 더 복습해요'):'오늘의 학습을 기록했어요.'}</h2><p>${correct} / ${checked.length}문항 정답 · ${wrong.length}문항 오답 또는 헷갈림</p><div class="flex">${wrong.length?button('이번 오답 다시 풀기 ↻','retry-result','','lime'):button('다음 학습 선택 →','learn','','lime')}<a class="btn ghost" href="#home">대시보드로</a></div></section>
+    <section class="result-hero"><span class="eyebrow">${s.mode==='exam'?'MOCK EXAM RESULT':'SESSION COMPLETE'}</span><div class="result-score">${checked.length?Number(score.toFixed(2)):'—'}<small> / 100</small></div><h2>${!checked.length?'채점한 문항이 없습니다.':s.mode==='exam'?(pass?'이번 연습은 합격 기준 충족':'취약한 개념을 한 번 더 복습해요'):'오늘의 학습을 기록했어요.'}</h2><p>${correct} / ${checked.length}문항 정답 · ${wrong.length}문항 오답 또는 헷갈림</p><div class="flex">${wrong.length?button('이번 오답 다시 풀기 ↻','retry-result','','lime'):button('다음 학습 선택 →','learn','','lime')}<a class="btn ghost" href="#history">저장된 풀이 기록</a><a class="btn ghost" href="#home">대시보드로</a></div></section>
     <section class="stats">${subjects.map((x,i)=>stat(i===0?'리눅스 운영 및 관리':'리눅스 활용',x.total?pct(x.correct,x.total):'—','%',`${x.correct} / ${x.total}문항 · ${x.total?(x.correct/x.total<.4?'40% 미만': '40% 이상'):'미응시'}`)).join('')}${stat('걸린 시간',Math.max(1,Math.round(((s.ended||Date.now())-s.started)/MINUTE)),'분','시작부터 완료까지 경과 시간')}${stat('누적 암기 완료',ALL_QUESTIONS.filter(mastered).length,'문항','시간 간격을 둔 3단계 복습')}</section>
     ${s.mode==='exam'?'<div class="callout">총점 60점 이상과 두 과목 각각 40% 이상을 모두 충족해야 합니다. 학습용 채점 결과이며 실제 시험 성적을 예측하거나 보장하지 않습니다.</div>':''}
     <div class="section-heading"><h2>문항별 해설</h2><span class="text-link">선택한 답과 정답 비교</span></div><div class="result-list">${s.items.map((it,i)=>{const q=BY_ID[it.id],ok=it.checked&&isCorrect(q,it.selected);return `<details><summary><span class="pill ${ok?'':'red'}">${!it.checked?'미채점':ok?'정답':'오답'}</span><span>${i+1}. ${esc(q.prompt)}</span></summary><p>내 선택: <strong>${it.selected===null?'미응답':esc(q.options[it.selected])}</strong></p>${q.examDate?questionImages(q):''}${explanation(q,ok,it.unsure)}</details>`;}).join('')}</div>`;
@@ -213,7 +253,7 @@ function review(){
   const next=ALL_QUESTIONS.map(q=>progress(q.id)).filter(p=>p.attempts&&p.due>Date.now()).sort((a,b)=>a.due-b.due)[0];
   main.innerHTML=heading('한 번 틀린 문제를, 내 것으로.','정답을 바로 다시 보는 것보다 시간 간격을 두고 직접 떠올리는 연습을 하세요.')+`
   <section class="stats">${stat('오답',wrong.length,'문항','마지막 유효 복습의 오답')}${stat('헷갈림',unsure.length,'문항','맞혔어도 자신 없던 문제')}${stat('복습 시간 도래',due.length,'문항','다음 복습 시각이 지난 문제')}${stat('전체 복습 대상',all.length,'문항','중복을 제외한 합계')}</section>
-  <div class="callout"><strong>틀림·헷갈림 → 10분 뒤 / 정답 1단계 → 30분 뒤 / 2단계 → 8시간 뒤 / 3단계 → 24시간 뒤.</strong><br>3단계에 도달하면 ‘암기 완료’로 표시합니다. 예약 전에 다시 풀어 맞혀도 단계와 오답 표시는 유지됩니다.${next?` 다음 예약: ${dateLabel(next.due)}.`:''}</div>
+  <div class="callout"><a class="btn secondary" href="#history">시험별 저장된 오답 · 답안 보기 →</a></div><div class="callout"><strong>틀림·헷갈림 → 10분 뒤 / 정답 1단계 → 30분 뒤 / 2단계 → 8시간 뒤 / 3단계 → 24시간 뒤.</strong><br>3단계에 도달하면 ‘암기 완료’로 표시합니다. 예약 전에 다시 풀어 맞혀도 단계와 오답 표시는 유지됩니다.${next?` 다음 예약: ${dateLabel(next.due)}.`:''}</div>
   ${all.length?`<div class="flex" style="margin-bottom:24px">${button('복습 20문항 시작 ↻','start-review')}${button('오답만','start-wrong','','secondary')}${button('헷갈림만','start-unsure','','secondary')}</div><div class="panel">${ranked(all).slice(0,30).map(q=>{const p=progress(q.id);return `<div class="topic-row" style="grid-template-columns:65px 1fr auto"><span class="pill ${p.wrong?'red':''}">${p.wrong?'오답':p.unsure?'헷갈림':'복습 도래'}</span><div><b>${esc(q.prompt)}</b><p class="small">${TOPIC[q.topic].name} · ${q.examDate?'원본 해설집':'정리본'} ${q.page}쪽 · ${p.attempts}회 풀이</p></div>${button('풀기','start-one',`data-id="${q.id}"`,'small secondary')}</div>`;}).join('')}${all.length>30?`<p class="small muted" style="margin-top:12px">상위 30개를 표시했습니다. 복습 시작 시 전체 ${all.length}문항에서 구성합니다.</p>`:''}</div>`:`<div class="empty"><h2>지금 복습할 문제가 없습니다.</h2><p>${next?`${dateLabel(next.due)}에 다음 복습이 열립니다.`:'문제를 풀면 오답과 복습 일정이 여기에 모입니다.'}</p><a class="btn" href="#learn">새 문제 풀러 가기 →</a></div>`}`;
 }
 function pastExams(year){
@@ -230,7 +270,7 @@ function pastExams(year){
     <div class="past-grid">${rows.map(e=>{
       const date=e.date.replaceAll('-',''),bank=PAST_BANK.exams.find(x=>x.date===date);
       const history=state.history.filter(h=>h.examDate===date);
-      return `<article class="panel past-card"><div class="flex"><span class="pill ${bank?'outline':'red'}">${bank?'80문항 · 응시 가능':'자료 없음 · 복원 중'}</span><span class="small muted">${e.date.replaceAll('-','.')}</span></div><h2>${e.year}년 ${e.round}회</h2><p class="small">리눅스마스터 2급 2차</p>${bank?`<p class="small muted">${history.length?`최근 ${Number(history[0].score.toFixed(2))}점 · ${history.length}회 응시`:'아직 응시 기록이 없습니다.'}</p>${button('기출시험 시작 →','start-past',`data-date="${date}"`)}<a class="text-link small" href="${bank.source}" target="_blank" rel="noopener">원본 해설집 PDF ↗</a>`:'<p class="small muted">2022년 1회는 제공 파일이 없어 시험에 포함하지 않았습니다.</p>'}<a class="text-link small" href="${e.url}" target="_blank" rel="noopener noreferrer">COMCBT 원문 게시물 ↗</a></article>`;
+      return `<article class="panel past-card"><div class="flex"><span class="pill ${bank?'outline':'red'}">${bank?'80문항 · 응시 가능':'자료 없음 · 복원 중'}</span><span class="small muted">${e.date.replaceAll('-','.')}</span></div><h2>${e.year}년 ${e.round}회</h2><p class="small">리눅스마스터 2급 2차</p>${bank?`<p class="small muted">${history.length?`최근 ${Number(history[0].score.toFixed(2))}점 · ${history.length}회 응시`:'아직 응시 기록이 없습니다.'}</p>${button('기출시험 시작 →','start-past',`data-date="${date}"`)}${history.length?historyLink(history[0]):''}<a class="text-link small" href="${bank.source}" target="_blank" rel="noopener">원본 해설집 PDF ↗</a>`:'<p class="small muted">2022년 1회는 제공 파일이 없어 시험에 포함하지 않았습니다.</p>'}<a class="text-link small" href="${e.url}" target="_blank" rel="noopener noreferrer">COMCBT 원문 게시물 ↗</a></article>`;
     }).join('')}</div>
     <div class="callout small">원본 정정 안내에 따라 2020년 2회 25번·2023년 1회 15번은 모두 정답, 2021년 1회 41번은 원본 ③·④를 정답으로 처리합니다. 화면의 보기 번호는 섞이지만 정답 내용은 그대로입니다. 기록은 이 브라우저에 저장됩니다. 기출 자료의 기술 설명은 시험 당시 환경과 현재 환경을 구분해서 확인하세요.</div>`;
 }
@@ -238,7 +278,7 @@ function exam(){main.innerHTML=heading('실전처럼 풀고, 준비 상태를 �
   <div class="callout">연도별 기출을 찾고 있나요? <a class="text-link" href="#past">2020년 이후 기출 회차 보기 →</a></div>
   <section class="hero"><div><span class="eyebrow">THE FINAL REHEARSAL</span><h2>100분, 80개의 질문.<br><em>지금 알고 있는 것을 꺼낼 시간.</em></h2><p>운영 및 관리 48문항 + 활용 32문항으로 구성한 연습 세트</p><div class="hero-actions">${button('모의고사 시작 →','start-exam','','lime')}${activeSession()&&isExam()?button('진행 중인 시험 이어서','resume','','ghost'):''}</div></div><div class="hero-art"><div class="orbit"><b>80</b></div><span class="art-note last">100:00 remaining</span></div></section>
   <section class="stats">${stat('문항 수','80','문항','객관식 4지선다')}${stat('제한 시간','100','분','시간 종료 시 자동 제출')}${stat('총점 기준','60','점 이상','80문항 중 48문항 이상 정답')}${stat('과목별 기준','40','% 이상','운영·관리 20개 / 활용 13개 이상')}</section>
-  <div class="callout">문제 세트는 9개 단원에서 나누어 추출하며 매번 보기를 섞습니다. 대시보드로 이동하거나 새로고침해도 시험 시간은 계속 흐릅니다. 브라우저를 닫았다가 돌아왔을 때 시간이 지났으면 자동 채점합니다.</div><div class="panel"><h2>모의고사 기록</h2>${state.history.filter(h=>h.mode==='exam').length?state.history.filter(h=>h.mode==='exam').map(h=>`<div class="history-row"><span>${dateLabel(h.at)} · ${esc(h.label)}</span><span>${h.correct} / ${h.total} 정답 · <strong>${Number(h.score.toFixed(2))}점</strong></span></div>`).join(''):'<p class="small" style="margin-top:15px">아직 응시 기록이 없습니다. 첫 시험으로 학습의 기준점을 만들어 보세요.</p>'}</div>`;}
+  <div class="callout">문제 세트는 9개 단원에서 나누어 추출하며 매번 보기를 섞습니다. 대시보드로 이동하거나 새로고침해도 시험 시간은 계속 흐릅니다. 브라우저를 닫았다가 돌아왔을 때 시간이 지났으면 자동 채점합니다.</div><div class="panel"><h2>모의고사 기록</h2>${state.history.filter(h=>h.mode==='exam').length?state.history.filter(h=>h.mode==='exam').map(h=>`<div class="history-row"><span>${dateLabel(h.at)} · ${esc(h.label)}</span><span>${h.correct} / ${h.total} 정답 · <strong>${Number(h.score.toFixed(2))}점</strong> ${historyLink(h)}</span></div>`).join(''):'<p class="small" style="margin-top:15px">아직 응시 기록이 없습니다. 첫 시험으로 학습의 기준점을 만들어 보세요.</p>'}</div>`;}
 
 const PLAN=[
   {day:1,title:'전체를 이해하고, 첫 회독 완성',hours:'약 6시간 + 중간 휴식',steps:[
@@ -281,10 +321,10 @@ function updateTimer(){const s=state.session;if(!s||s.finished||s.mode!=='exam')
 function render(){
   clearInterval(timerHandle);
   const route=(location.hash.slice(1)||'home').split('/'),name=route[0];
-  const labels={home:'학습 대시보드',learn:'문제 풀기',review:'오답 · 복습',exam:'실전 모의고사',past:'기출 회차',notes:'핵심 노트',plan:'2일 학습 플랜',session:isExam()?(state.session.examDate?'기출시험':'실전 모의고사'):'문제 풀기',sync:'학습 동기화',about:'자료 · 학습 안내'};
+  const labels={home:'학습 대시보드',learn:'문제 풀기',review:'오답 · 복습',exam:'실전 모의고사',past:'기출 회차',notes:'핵심 노트',plan:'2일 학습 플랜',session:isExam()?(state.session.examDate?'기출시험':'실전 모의고사'):'문제 풀기',history:'풀이 기록',sync:'학습 동기화',about:'자료 · 학습 안내'};
   document.getElementById('page-title').textContent=labels[name]||labels.home;
   document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('active',a.dataset.nav===(name==='session'?(isExam()?(state.session.examDate?'past':'exam'):'learn'):name)));
-  if(name==='home')home();else if(name==='learn')learn(route[1]);else if(name==='review')review();else if(name==='exam')exam();else if(name==='past')pastExams(route[1]);else if(name==='notes')notes();else if(name==='plan')plan();else if(name==='session')renderQuiz();else if(name==='sync')syncPage();else if(name==='about')about();else home();
+  if(name==='home')home();else if(name==='learn')learn(route[1]);else if(name==='review')review();else if(name==='exam')exam();else if(name==='past')pastExams(route[1]);else if(name==='notes')notes();else if(name==='plan')plan();else if(name==='session')renderQuiz();else if(name==='history')historyPage(route[1],route[2]);else if(name==='sync')syncPage();else if(name==='about')about();else home();
   updateBadges();showStorageWarning();window.scrollTo(0,0);
   if(activeSession()&&isExam()){updateTimer();timerHandle=setInterval(updateTimer,1000);}
 }
@@ -295,6 +335,8 @@ document.addEventListener('click',event=>{
   const s=state.session;
   switch(action){
     case 'learn':case 'review':case 'exam':go(action);break;
+    case 'retry-history':retryHistory(el.dataset.key);break;
+    case 'retry-history-unsure':retryHistory(el.dataset.key,true);break;
     case 'resume':go('session');break;
     case 'start-core':start(QUESTIONS.filter(q=>q.red),'빨간 핵심 집중');break;
     case 'start-topic':start(QUESTIONS.filter(q=>q.topic===el.dataset.topic),TOPIC[el.dataset.topic].name,'practice','all');break;
@@ -344,11 +386,12 @@ document.addEventListener('keydown',event=>{
 function exportState(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`linuxmaster-progress-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('학습 기록을 파일로 저장했습니다.');}
 document.getElementById('import-file').addEventListener('change',async event=>{
   const file=event.target.files[0];if(!file)return;
-  try{if(file.size>5*1024*1024)throw Error('size');const imported=validateState(JSON.parse(await file.text()));if(!imported)throw Error('format');if(confirm('현재 브라우저의 학습 기록을 선택한 파일의 기록으로 교체할까요?')){state=imported;save();render();toast('학습 기록을 불러왔습니다.');}}
+  try{if(file.size>5*1024*1024)throw Error('size');const imported=validateState(JSON.parse(await file.text()));if(!imported)throw Error('format');if(confirm('현재 브라우저의 학습 기록을 선택한 파일의 기록으로 교체할까요?')){state=imported;recoverLastArchive();save();render();toast('학습 기록을 불러왔습니다.');}}
   catch{toast('올바른 학습 기록 파일이 아닙니다. 이 CBT에서 내보낸 JSON을 선택해 주세요.');}
   event.target.value='';
 });
 window.addEventListener('hashchange',render);
 window.addEventListener('pagehide',save);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){updateTimer();updateBadges();}});
+if(recoverLastArchive())save();
 render();
