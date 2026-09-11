@@ -238,7 +238,7 @@ function renderQuiz(scroll=true){
   <div class="quiz-tools"><label class="check"><input id="unsure" type="checkbox" ${item.unsure?'checked':''} ${item.checked?'disabled':''}> 맞혀도 헷갈려요</label><div class="flex"><button class="bookmark ${progress(q.id).bookmark?'on':''}" data-action="bookmark">${progress(q.id).bookmark?'★ 저장됨':'☆ 핵심 노트에 저장'}</button>${s.mode==='exam'?`<button class="bookmark ${item.flag?'on':''}" data-action="flag">${item.flag?'⚑ 표시됨':'⚐ 나중에 검토'}</button>`:''}</div></div>
   ${item.checked?explanation(q,isCorrect(q,item.selected),item.unsure)+(s.focus?focusExplanation(q):'')+(s.focus?.course?button(item.unsure?'헷갈림 · 복습 예약됨':'맞혔어도 헷갈려요','course-unsure',item.unsure?'disabled':'','secondary small'):''):''}
   <div class="quiz-nav">${button('← 이전','previous',s.index===0?'disabled':'','secondary')}<span class="small muted">${answered} / ${s.items.length} ${s.mode==='exam'?'선택':'채점'}</span>${s.mode==='practice'&&!item.checked?button('정답 확인','check',item.selected===null?'disabled':''):button(s.index===s.items.length-1?'결과 보기 →':'다음 문제 →',s.index===s.items.length-1?'finish':'next')}</div>
-  </section><aside class="quiz-aside"><div class="panel"><h3>${s.mode==='exam'||s.focus?'남은 시간':'학습 진행'}</h3>${s.mode==='exam'||s.focus?'<div class="timer" id="timer"></div>':`<p class="small" style="margin-top:7px">${answered}문항 채점 · ${s.items.length-answered}문항 남음</p>${bar(pct(answered,s.items.length))}`}<div class="answer-map" aria-label="문항 이동">${s.items.map((it,i)=>`<button class="map-btn ${(s.mode==='exam'?it.selected!==null:it.checked)?'answered':''} ${i===s.index?'current':''} ${it.flag?'flagged':''} ${it.checked&&!isCorrect(BY_ID[it.id],it.selected)?'miss':''}" data-action="jump" data-index="${i}" aria-label="${i+1}번${it.checked?' 채점 완료':it.selected!==null?' 선택 완료':''}${it.flag?' 검토 표시':''}" ${i===s.index?'aria-current="step"':''}>${i+1}</button>`).join('')}</div><p class="small muted">초록: ${s.mode==='exam'?'답 선택':'채점 완료'}${s.mode==='exam'?' · 점: 검토 표시':' · 빨강: 오답'}</p><div style="margin-top:18px">${button(s.mode==='exam'?'답안 제출하기':'여기까지 학습 완료','finish','','secondary')}</div><a class="text-link" style="display:block;margin-top:13px" href="#home">${s.mode==='exam'||s.focus?'대시보드로 (시간은 계속 흐름)':'잠시 쉬기 · 자동 저장'}</a><p class="keyboard-tip">1–4 보기 선택<br>Enter 채점 / 다음 · ← → 문항 이동<br>${s.focus?.course?'단계마다 설명을 읽고 연습합니다. 오답·헷갈림은 단계 안에서 최대 두 번 추가로 풀고 종합 복습에서 다시 확인합니다.':s.focus?'보기를 누르면 즉시 채점합니다. 오답·헷갈림을 반복하고 다른 문제도 섞습니다. 1시간 후 자동 종료합니다.':s.mode==='practice'?'틀린 문제는 몇 문제 뒤 1회 재등장하며, 추가 회독은 복습에서 진행합니다.':'미응답은 오답으로 채점됩니다(모두 정답 문항 제외).'}</p></div></aside></div>`;
+  </section><aside class="quiz-aside"><div class="panel"><h3>${s.mode==='exam'||s.focus?'남은 시간':'학습 진행'}</h3>${s.mode==='exam'||s.focus?timerControls():`<p class="small" style="margin-top:7px">${answered}문항 채점 · ${s.items.length-answered}문항 남음</p>${bar(pct(answered,s.items.length))}`}<div class="answer-map" aria-label="문항 이동">${s.items.map((it,i)=>`<button class="map-btn ${(s.mode==='exam'?it.selected!==null:it.checked)?'answered':''} ${i===s.index?'current':''} ${it.flag?'flagged':''} ${it.checked&&!isCorrect(BY_ID[it.id],it.selected)?'miss':''}" data-action="jump" data-index="${i}" aria-label="${i+1}번${it.checked?' 채점 완료':it.selected!==null?' 선택 완료':''}${it.flag?' 검토 표시':''}" ${i===s.index?'aria-current="step"':''}>${i+1}</button>`).join('')}</div><p class="small muted">초록: ${s.mode==='exam'?'답 선택':'채점 완료'}${s.mode==='exam'?' · 점: 검토 표시':' · 빨강: 오답'}</p><div style="margin-top:18px">${button(s.mode==='exam'?'답안 제출하기':'여기까지 학습 완료','finish','','secondary')}</div><a class="text-link" style="display:block;margin-top:13px" href="#home">${s.mode==='exam'||s.focus?'대시보드로 (시간은 계속 흐름)':'잠시 쉬기 · 자동 저장'}</a><p class="keyboard-tip">1–4 보기 선택<br>Enter 채점 / 다음 · ← → 문항 이동<br>${s.focus?.course?'단계마다 설명을 읽고 연습합니다. 오답·헷갈림은 단계 안에서 최대 두 번 추가로 풀고 종합 복습에서 다시 확인합니다.':s.focus?'보기를 누르면 즉시 채점합니다. 오답·헷갈림을 반복하고 다른 문제도 섞습니다. 남은 시간이 끝나면 자동 종료합니다.':s.mode==='practice'?'틀린 문제는 몇 문제 뒤 1회 재등장하며, 추가 회독은 복습에서 진행합니다.':'미응답은 오답으로 채점됩니다(모두 정답 문항 제외).'}</p></div></aside></div>`;
   if(scroll)window.scrollTo(0,0);updateTimer();
 }
 function explanation(q,correct=true,unsure=false){
@@ -356,6 +356,12 @@ function about(){main.innerHTML=heading('자료와 학습 안내','학습 기준
 function syncPage(){if(window.STATIC_CBT){about();return;}main.innerHTML=heading('학습 동기화','다른 브라우저와 기록을 연결하고, 풀던 문제를 이어서 학습하세요.')+(typeof Sync!=='undefined'?Sync.panel():`<section class="panel"><p>동기화 기능을 불러오는 중입니다. 이 안내가 계속 보이면 페이지를 새로고침해 주세요.</p><a class="btn secondary" href="?v=20260910#sync">최신 화면 다시 열기</a></section>`);}
 
 function updateBadges(){document.getElementById('review-count').textContent=ALL_QUESTIONS.filter(reviewable).length;}
+function timerControls(){return `<div class="timer-controls"><div class="timer" id="timer" aria-label="남은 시간"></div>${button('+10분 연장','extend-time','','secondary small')}</div>`;}
+function extendTime(){
+  const s=state.session;if(!s||s.finished||(s.mode!=='exam'&&!s.focus))return;
+  if(Date.now()>=s.deadline){updateTimer();return;}
+  s.deadline+=10*MINUTE;save();updateTimer();toast('학습 시간을 10분 연장했습니다.');
+}
 function updateTimer(){const s=state.session;if(!s||s.finished||(s.mode!=='exam'&&!s.focus))return;const left=Math.max(0,Math.ceil((s.deadline-Date.now())/1000));const el=document.getElementById('timer');if(el){el.textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;el.classList.toggle('urgent',left<300);}if(!left)finish(true);}
 function render(){
   clearInterval(timerHandle);
@@ -400,6 +406,7 @@ document.addEventListener('click',event=>{
     case 'start-curriculum':startCurriculum();break;
     case 'course-ready':courseReady();break;
     case 'course-unsure':courseUnsure();break;
+    case 'extend-time':extendTime();break;
     case 'start-focus':startFocus();break;
     case 'start-concept':startConcept(el.dataset.id);break;
     case 'notes-prev':notePage--;notes();window.scrollTo(0,0);break;
