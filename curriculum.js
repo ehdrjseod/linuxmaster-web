@@ -93,10 +93,42 @@ window.STUDY_CURRICULUM = [
   sources:[['CUPS 인쇄 명령 안내','https://www.cups.org/doc/options.html'],['lpr 옵션','https://www.cups.org/doc/man-lpr.html'],['lp 옵션','https://www.cups.org/doc/man-lp.html']]},
  {...window.STUDY_CURRICULUM_V2.at(-1),concepts:[...window.STUDY_CURRICULUM_V2.at(-1).concepts,'print-commands','printing'],steps:[...window.STUDY_CURRICULUM_V2.at(-1).steps,'프린터는 BSD·System V 계열과 요청·조회·취소 역할을 먼저 구분합니다.']}
 ];
-const CURRENT_COURSE_VERSION=3;
+// Keep the previous printer course intact for saved sessions.
+window.STUDY_CURRICULUM_V3 = window.STUDY_CURRICULUM;
+window.STUDY_CURRICULUM = [
+ ...window.STUDY_CURRICULUM_V3.slice(0,-1),
+ {id:'ipv4',title:'IPv4: 주소·클래스·사설 IP 구분',minutes:8,concepts:['ipv4'],
+  goal:'IPv4 주소 길이와 사설·루프백 주소를 구분한다.',
+  story:'IP 주소를 집 주소라고 생각하세요. 어느 동네인지와 그 동네의 어느 집인지가 함께 들어 있습니다. IPv4는 8비트씩 네 묶음, 총 32비트이며 각 묶음을 0~255의 숫자로 표시합니다.',
+  steps:['192.168.10.130은 네 묶음의 숫자입니다. 하지만 네트워크와 호스트의 경계가 항상 점 위치인 것은 아닙니다. /26처럼 함께 주어진 프리픽스로 경계를 정합니다.',
+   '기출의 전통적인 클래스 구분: A는 첫 숫자 1~126(기본 /8), B는 128~191(/16), C는 192~223(/24)입니다. 0과 127은 특별한 용도로 구분합니다. 현재 CIDR에서는 주소의 첫 숫자보다 명시된 /n을 기준으로 계산하세요.',
+   '사설 주소는 10.0.0.0~10.255.255.255, 172.16.0.0~172.31.255.255, 192.168.0.0~192.168.255.255입니다. 172로 시작한다고 모두 사설은 아닙니다.',
+   '127.0.0.0/8은 자기 호스트를 가리키는 루프백 범위이며 대표 주소는 127.0.0.1입니다. 사설 주소가 아니라고 전부 일반 공인 호스트 주소인 것은 아닙니다.',
+   '클래스 D의 224~239는 멀티캐스트, E의 240~255는 예약·특수 용도와 연결합니다. 첫 숫자 255 범위에는 제한 브로드캐스트 255.255.255.255도 있습니다. 일반 A/B/C 호스트 주소처럼 취급하지 마세요.'],
+  example:'172.20.1.5는 사설 범위에 들어갑니다. 172.32.1.5는 RFC 1918 사설 범위 밖입니다. 127.0.0.1은 다른 PC가 아니라 내 호스트를 가리킵니다.',
+  recall:'IPv4는 몇 비트인가요? 172.31.1.1과 172.32.1.1 중 사설 주소는 무엇인가요?',
+  answer:'32비트입니다. 172.31.1.1은 사설이고 172.32.1.1은 RFC 1918 사설 범위 밖입니다. 172.16~172.31의 두 번째 숫자 범위를 확인하세요.',
+  sources:[['RFC 1918 사설 주소','https://www.rfc-editor.org/rfc/rfc1918.html']]},
+ {id:'subnet',title:'IPv4 서브넷: 구간·호스트 수·게이트웨이',minutes:12,concepts:['subnet'],
+  goal:'프리픽스에서 네트워크·브로드캐스트·호스트 범위를 계산한다.',
+  story:'큰 동네를 작은 구역으로 나누는 것이 서브넷팅입니다. /26은 32비트 중 앞 26비트를 구역 이름으로 쓰고, 남은 6비트를 그 구역 안의 주소에 쓴다는 뜻입니다.',
+  steps:['1. 호스트 비트부터 찾습니다. /26이면 32−26=6비트입니다. 전체 주소는 2의 6제곱=64개입니다. 일반적인 서브넷에서는 네트워크·브로드캐스트 두 주소를 빼서 62개를 호스트에 쓸 수 있습니다.',
+   '2. /26의 마스크는 255.255.255.192입니다. 마지막 숫자 192는 이진수 11000000이므로 앞 2비트가 네트워크 부분입니다. 앞의 24비트와 합쳐 26비트가 됩니다.',
+   '3. 192.168.10.130/26의 마지막 숫자는 64개씩 끊습니다. 0~63, 64~127, 128~191, 192~255 중 130은 128~191에 들어갑니다. 이 마지막 숫자 방식은 여기처럼 /24~ /30인 예에 적용하며, 더 큰 구간에서는 앞쪽 숫자도 함께 계산합니다.',
+   '4. 첫 주소 192.168.10.128은 네트워크 주소, 마지막 .191은 브로드캐스트 주소입니다. 일반 호스트는 .129~.190입니다. 비트로는 호스트 부분이 모두 0이면 네트워크, 모두 1이면 브로드캐스트입니다.',
+   '5. 게이트웨이는 이 서브넷의 사용 가능한 호스트 주소 중 관리자가 배정합니다. 반드시 첫 번째나 마지막이어야 하는 규칙은 없습니다. .129를 게이트웨이로 쓰면 나머지 기기용은 61개입니다. 게이트웨이 별도 배정을 묻지 않는 일반 호스트 수 문제에서는 62개로 답합니다.',
+   '6. /27은 32개 구간·30호스트, /28은 16개 구간·14호스트입니다. /24를 /26으로 나누면 네트워크 비트를 2개 더 쓰므로 4개 서브넷입니다. /31 점대점 링크는 두 주소를 끝점에 쓸 수 있고 /32는 단일 주소이므로 무조건 2를 빼지 않습니다.'],
+  example:'192.168.10.130/26 → 64개 구간 → .128~.191 → 호스트 .129~.190, 62개. /27로 바꾸면 32개 구간 → .128~.159 → 호스트 .129~.158, 30개.',
+  recall:'192.168.10.70/27의 네트워크 주소, 브로드캐스트 주소, 호스트 범위는? 게이트웨이를 .65로 쓰면 나머지 기기는 몇 대인가요?',
+  answer:'32개 단위이므로 .64~.95 구간입니다. 네트워크는 192.168.10.64, 브로드캐스트는 .95, 호스트는 .65~.94로 30개입니다. 게이트웨이에 .65 하나를 배정하면 나머지 기기는 29대입니다.',
+  sources:[['RFC 3021: /31 예외','https://www.rfc-editor.org/rfc/rfc3021.html']]},
+ {...window.STUDY_CURRICULUM_V3.at(-1),concepts:[...window.STUDY_CURRICULUM_V3.at(-1).concepts,'ipv4','subnet'],steps:[...window.STUDY_CURRICULUM_V3.at(-1).steps,'IPv4는 사설 범위를 확인하고, 서브넷은 호스트 비트 → 구간 → 양 끝 주소 순서로 계산합니다.']}
+];
+const CURRENT_COURSE_VERSION=4;
 function courseUnits(session){
  if(!session?.focus?.course)return window.STUDY_CURRICULUM;
- if(session.focus.courseVersion===3)return window.STUDY_CURRICULUM;
+ if(session.focus.courseVersion===4)return window.STUDY_CURRICULUM;
+ if(session.focus.courseVersion===3)return window.STUDY_CURRICULUM_V3;
  if(session.focus.courseVersion===2)return window.STUDY_CURRICULUM_V2;
  return window.LEGACY_STUDY_CURRICULUM;
 }
@@ -122,7 +154,7 @@ function startCurriculum(restart=false){
   save();go('session');
 }
 function curriculumPage(){
-  main.innerHTML=heading('이해하고 반복하는 맞춤 코스',`특수 권한 → 우선순위 → 쿼터 → Bash → 패키지 → XFS → 압축·묶음 → 프린터 → 종합 복습. 권장 ${courseMinutes()}분입니다.`)+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>기본 시간은 ${courseMinutes()}분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&state.session.focus.courseVersion!==CURRENT_COURSE_VERSION?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('프린터 포함 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>오늘: 설명을 이해하고 코스를 1회 진행합니다. 내일: 같은 코스를 다시 풀면서 설명을 보기 전에 이유를 말합니다. 3일 뒤: 오답·복습 메뉴에서 남아 있는 문제를 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
+  main.innerHTML=heading('이해하고 반복하는 맞춤 코스',`특수 권한 → 우선순위 → 쿼터 → Bash → 패키지 → XFS → 압축·묶음 → 프린터 → IPv4 → 서브넷 → 종합 복습. 권장 ${courseMinutes()}분입니다.`)+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>기본 시간은 ${courseMinutes()}분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&state.session.focus.courseVersion!==CURRENT_COURSE_VERSION?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('IPv4 포함 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>오늘: 설명을 이해하고 코스를 1회 진행합니다. 내일: 같은 코스를 다시 풀면서 설명을 보기 전에 이유를 말합니다. 3일 뒤: 오답·복습 메뉴에서 남아 있는 문제를 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
 }
 function courseIntro(){
   const s=state.session,it=s.items[s.index],u=courseUnits(s)[it.lesson];
