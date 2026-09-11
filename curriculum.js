@@ -124,19 +124,328 @@ window.STUDY_CURRICULUM = [
   sources:[['RFC 3021: /31 예외','https://www.rfc-editor.org/rfc/rfc3021.html']]},
  {...window.STUDY_CURRICULUM_V3.at(-1),concepts:[...window.STUDY_CURRICULUM_V3.at(-1).concepts,'ipv4','subnet'],steps:[...window.STUDY_CURRICULUM_V3.at(-1).steps,'IPv4는 사설 범위를 확인하고, 서브넷은 호스트 비트 → 구간 → 양 끝 주소 순서로 계산합니다.']}
 ];
+window.BASIC_CURRICULUM = [
+ {
+  "id": "basic-files",
+  "title": "파일·디렉터리: 위치·생성·복사·이동",
+  "concepts": [
+   "file-commands"
+  ],
+  "minutes": 5,
+  "goal": "ls · cd · pwd · mkdir · rmdir · touch · cp · mv · rm",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 파일·디렉터리: 위치·생성·복사·이동에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "pwd는 현재 작업 디렉터리 경로, ls는 항목 목록을 출력합니다. ls -a는 숨김 항목도, ls -l은 권한·소유자 등을 자세히 보여줍니다.",
+   "cd는 작업 디렉터리를 바꿉니다. cd ..는 상위 디렉터리, cd ~는 내 홈 디렉터리로 이동합니다.",
+   "mkdir는 디렉터리 생성, mkdir -p는 필요한 상위 경로도 생성합니다. rmdir는 빈 디렉터리만 제거합니다.",
+   "touch는 시간 정보를 갱신합니다. 파일이 없으면 기본적으로 빈 파일을 만들지만, 기존 파일 내용을 비우지는 않습니다.",
+   "cp는 복사본을 만들고 mv는 이동하거나 이름을 바꿉니다. 디렉터리 복사는 cp -R로 하위 항목까지 처리합니다.",
+   "rm은 파일 제거, rm -r은 디렉터리와 그 내용을 재귀적으로 제거합니다. 휴지통 이동 명령이 아니므로 학습용 파일을 대상으로 구분하세요."
+  ],
+  "example": "cp memo.txt copy.txt → 원본과 복사본이 남음. mv copy.txt final.txt → 이름이 바뀜.",
+  "recall": "현재 경로 확인과 현재 항목 목록 확인은 각각? 기존 파일에 touch를 쓰면 내용이 지워지나요?",
+  "answer": "경로는 pwd, 목록은 ls입니다. touch는 기존 내용을 비우지 않고 시간을 갱신합니다.",
+  "sources": [
+   [
+    "GNU Coreutils",
+    "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+   ],
+   [
+    "Bash cd",
+    "https://www.gnu.org/software/bash/manual/bash.html"
+   ]
+  ]
+ },
+ {
+  "id": "basic-text",
+  "title": "파일 내용: 전체·앞·뒤·페이지",
+  "concepts": [
+   "text-commands"
+  ],
+  "minutes": 5,
+  "goal": "cat · head · tail · more · less",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 파일 내용: 전체·앞·뒤·페이지에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "cat은 내용을 표준 출력으로 이어서 보여줍니다. 파일을 편집하거나 자동으로 페이지를 나누는 명령은 아닙니다.",
+   "head -n 5는 앞 5줄, tail -n 5는 뒤 5줄입니다. 줄 수를 생략하면 기본적으로 10줄입니다.",
+   "tail -f는 파일 끝에 새로 추가되는 내용을 계속 관찰합니다. 로그 관찰과 연결하세요.",
+   "more와 less는 긴 텍스트를 페이지 단위로 보는 도구입니다. less는 앞뒤 이동과 검색에 편리하며 q로 나옵니다. more도 구현에 따라 뒤로 이동할 수 있으므로 무조건 한 방향이라고 외우지 마세요."
+  ],
+  "example": "로그 앞부분은 head -n 5 app.log, 최근 부분은 tail -n 5 app.log.",
+  "recall": "긴 파일을 앞뒤로 살피려면? 계속 추가되는 로그를 보려면?",
+  "answer": "less로 앞뒤를 살피고 tail -f로 추가되는 로그를 관찰합니다.",
+  "sources": [
+   [
+    "GNU Coreutils",
+    "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+   ],
+   [
+    "less 매뉴얼",
+    "https://www.greenwoodsoftware.com/less/less.html"
+   ]
+  ]
+ },
+ {
+  "id": "basic-rights",
+  "title": "권한: 허가권과 소유권",
+  "concepts": [
+   "permissions",
+   "ownership"
+  ],
+  "minutes": 5,
+  "goal": "chmod · chown · chgrp",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 권한: 허가권과 소유권에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "chmod는 허가권을 바꿉니다. r=4, w=2, x=1을 더해서 소유자·그룹·기타 사용자 순서로 씁니다.",
+   "chmod 640 memo.txt는 소유자 읽기·쓰기, 그룹 읽기, 기타 권한 없음입니다.",
+   "chown alice:dev memo.txt는 소유자와 그룹을 바꿉니다. chgrp dev memo.txt는 그룹만 바꿉니다.",
+   "파일의 쓰기 권한과 삭제 가능 여부는 다릅니다. 삭제는 부모 디렉터리의 쓰기·탐색 권한과 Sticky bit 등의 영향을 받습니다."
+  ],
+  "example": "허가권을 바꾸려면 chmod, 주인을 바꾸려면 chown, 그룹만 바꾸려면 chgrp.",
+  "recall": "chown과 chmod 중 실행 권한을 추가하는 명령은?",
+  "answer": "chmod입니다. chmod u+x script.sh는 소유자 실행 권한을 추가합니다.",
+  "sources": [
+   [
+    "GNU Coreutils",
+    "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+   ]
+  ]
+ },
+ {
+  "id": "basic-search",
+  "title": "검색: 파일·내용·명령 위치",
+  "concepts": [
+   "search-commands"
+  ],
+  "minutes": 5,
+  "goal": "find · grep · which · whereis",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 검색: 파일·내용·명령 위치에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "find는 지정한 경로 아래에서 이름·유형 등의 조건으로 파일을 찾습니다. 와일드카드는 따옴표로 감싸 셸의 조기 확장을 막습니다.",
+   "grep은 파일 내용에서 패턴에 맞는 줄을 찾습니다. grep -n은 줄 번호, -i는 대소문자 무시입니다.",
+   "which는 보통 PATH에서 실행 파일을 찾습니다. alias·함수·셸 내장 명령은 구현에 따라 다르므로 셸이 실제 해석하는 종류는 type으로 확인할 수 있습니다.",
+   "whereis는 명령의 바이너리·소스·매뉴얼 위치를 알려줍니다. 디스크 전체의 모든 일반 파일을 찾는 도구가 아닙니다."
+  ],
+  "example": "find . -name '*.log' → 로그 파일 경로. grep -n ERROR app.log → ERROR가 있는 줄.",
+  "recall": "파일 이름을 찾는 것과 파일 속 문장을 찾는 것은 각각?",
+  "answer": "파일 조건 검색은 find, 내용 패턴 검색은 grep입니다.",
+  "sources": [
+   [
+    "GNU find",
+    "https://www.gnu.org/software/findutils/manual/html_mono/find.html"
+   ],
+   [
+    "GNU grep",
+    "https://www.gnu.org/software/grep/manual/grep.html"
+   ],
+   [
+    "whereis",
+    "https://man7.org/linux/man-pages/man1/whereis.1.html"
+   ]
+  ]
+ },
+ {
+  "id": "basic-compression",
+  "title": "압축: 묶기와 압축 해제",
+  "concepts": [
+   "tar",
+   "compression"
+  ],
+  "minutes": 5,
+  "goal": "tar · gzip · gunzip · zip · unzip",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 압축: 묶기와 압축 해제에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "tar는 파일을 묶거나 꺼냅니다. c는 생성, x는 추출, t는 목록, f 뒤에는 묶음 파일 이름입니다.",
+   "gzip는 .gz 압축, gunzip는 gzip 압축 해제입니다. gzip -d도 해제이며 gzip -k는 원본을 유지합니다.",
+   "tar -czf backup.tar.gz docs/는 tar 묶음과 gzip 압축을 함께 합니다. tar -xzf backup.tar.gz는 압축을 풀고 묶인 파일도 꺼냅니다.",
+   "zip는 여러 파일을 ZIP 묶음으로 압축할 수 있고 unzip은 ZIP을 풉니다. zip -r backup.zip docs/는 디렉터리 아래까지 포함합니다."
+  ],
+  "example": "ZIP은 zip/unzip, GZIP은 gzip/gunzip으로 짝지으세요.",
+  "recall": "gunzip으로 backup.zip을 풀면 되나요?",
+  "answer": "아니요. ZIP은 unzip, gzip 형식의 .gz는 gunzip입니다.",
+  "sources": [
+   [
+    "GNU tar",
+    "https://www.gnu.org/software/tar/manual/tar.html"
+   ],
+   [
+    "Info-ZIP",
+    "https://infozip.sourceforge.net/"
+   ]
+  ]
+ },
+ {
+  "id": "basic-disk",
+  "title": "디스크: 공간 확인과 연결",
+  "concepts": [
+   "disk-usage",
+   "mount"
+  ],
+  "minutes": 5,
+  "goal": "df · du · mount · umount",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 디스크: 공간 확인과 연결에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "df -h는 파일 시스템별 전체·사용·여유 공간을 보여줍니다. du -sh 경로는 해당 파일·디렉터리의 디스크 사용량 합계를 보여줍니다.",
+   "h는 사람이 읽기 쉬운 단위, du의 s는 합계입니다. 디스크가 찼으면 df로 확인하고 du로 큰 디렉터리를 찾는 흐름을 기억하세요.",
+   "mount는 파일 시스템을 디렉터리 경로에 연결합니다. umount는 연결을 해제합니다. 철자는 unmount가 아니라 umount입니다.",
+   "연결 해제는 포맷이나 파일 삭제와 다릅니다. 사용 중인 파일 시스템은 해제가 거부될 수 있습니다."
+  ],
+  "example": "mount /dev/sdb1 /mnt/data → 연결. umount /mnt/data → 해제. 장치 이름은 학습용 예시입니다.",
+  "recall": "디스크 여유 공간과 /home의 사용량 합계는 각각?",
+  "answer": "df -h로 파일 시스템 여유 공간을, du -sh /home으로 경로 사용량 합계를 봅니다.",
+  "sources": [
+   [
+    "GNU Coreutils",
+    "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+   ],
+   [
+    "mount",
+    "https://man7.org/linux/man-pages/man8/mount.8.html"
+   ]
+  ]
+ },
+ {
+  "id": "basic-process",
+  "title": "프로세스: 조회·신호·작업 제어",
+  "concepts": [
+   "ps",
+   "monitor",
+   "signals",
+   "job-control"
+  ],
+  "minutes": 5,
+  "goal": "ps · top · kill · bg · fg · jobs",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 프로세스: 조회·신호·작업 제어에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "ps는 프로세스 목록을 한 시점에 보여주고 top은 사용량 등을 갱신해 보여줍니다.",
+   "kill은 PID에 시그널을 보냅니다. 기본은 SIGTERM이며 kill -9는 SIGKILL입니다. kill이 항상 강제 종료를 뜻하지는 않습니다.",
+   "jobs는 현재 셸의 작업 목록입니다. 시스템 전체 프로세스 목록인 ps와 구분하세요.",
+   "작업 제어가 켜진 대화형 셸에서 Ctrl+Z는 보통 전경 작업을 정지시킵니다. bg %1은 작업 1을 뒤에서 재개, fg %1은 앞으로 가져옵니다.",
+   "%1은 셸 작업 번호, 1234는 PID처럼 대상을 구분합니다. 백그라운드에서도 터미널 입력이 필요하면 다시 정지할 수 있습니다."
+  ],
+  "example": "jobs → [1] Stopped 확인 → bg %1로 뒤에서 재개 → fg %1로 앞에서 실행.",
+  "recall": "전체 프로세스와 현재 셸 작업은 어떤 명령으로 구분하나요?",
+  "answer": "전체 프로세스 목록은 ps, 현재 셸 작업은 jobs입니다. top은 자원 사용량 변화를 관찰합니다.",
+  "sources": [
+   [
+    "Bash 작업 제어",
+    "https://www.gnu.org/software/bash/manual/bash.html#Job-Control"
+   ],
+   [
+    "ps",
+    "https://man7.org/linux/man-pages/man1/ps.1.html"
+   ]
+  ]
+ },
+ {
+  "id": "basic-users",
+  "title": "사용자 관리: 계정·암호·전환",
+  "concepts": [
+   "user-commands"
+  ],
+  "minutes": 5,
+  "goal": "useradd · userdel · passwd · su",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 사용자 관리: 계정·암호·전환에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "useradd는 계정 생성입니다. useradd -m alice는 홈 디렉터리도 생성합니다. 기본 동작은 배포판 설정에 따라 달라집니다.",
+   "userdel은 계정 삭제이며 -r을 주면 홈 디렉터리와 메일 스풀도 제거합니다. 다른 위치의 소유 파일을 모두 자동 삭제하는 뜻은 아닙니다.",
+   "passwd는 암호 변경 명령입니다. /etc/passwd는 계정 정보 파일이므로 명령과 파일 이름을 구분하세요.",
+   "su는 사용자 전환입니다. su - alice는 로그인과 유사한 환경으로 전환합니다. 권한·인증이 필요할 수 있으며 새 계정을 만드는 명령은 아닙니다."
+  ],
+  "example": "계정 생성 useradd → 암호 설정 passwd → 사용자 전환 su → 계정 제거 userdel.",
+  "recall": "su alice와 useradd alice는 무엇이 다른가요?",
+  "answer": "su는 기존 사용자로 전환, useradd는 새 계정 생성입니다.",
+  "sources": [
+   [
+    "useradd",
+    "https://man7.org/linux/man-pages/man8/useradd.8.html"
+   ],
+   [
+    "userdel",
+    "https://man7.org/linux/man-pages/man8/userdel.8.html"
+   ],
+   [
+    "su",
+    "https://man7.org/linux/man-pages/man1/su.1.html"
+   ]
+  ]
+ },
+ {
+  "id": "basic-system",
+  "title": "시스템: 종료·시간·사용자 확인",
+  "concepts": [
+   "system-commands"
+  ],
+  "minutes": 5,
+  "goal": "shutdown · reboot · date · who · whoami",
+  "story": "먼저 어떤 일을 하려는지 말하고 명령을 고르세요. 시스템: 종료·시간·사용자 확인에서 비슷한 명령의 차이를 연습합니다.",
+  "steps": [
+   "shutdown은 시스템 종료·재시작을 예약하거나 요청합니다. systemd 환경에서 shutdown -h +10은 10분 뒤 종료 예약, shutdown -c는 예약 취소입니다.",
+   "reboot는 재부팅 요청입니다. shutdown -r now도 즉시 재부팅 요청과 연결합니다. 명령을 외우는 예시이며 실행하면 사용 중인 작업에 영향을 줍니다.",
+   "date는 현재 날짜·시간을 표시합니다. date +%F는 연-월-일 형식입니다.",
+   "who는 로그인 세션 정보, whoami는 현재 유효 사용자 이름입니다. su로 전환하면 whoami 결과가 바뀔 수 있으며 who 목록과 같을 필요는 없습니다."
+  ],
+  "example": "date → 지금 시각. who → 로그인 세션. whoami → 현재 나는 누구 권한인가?",
+  "recall": "who와 whoami 중 현재 유효 사용자 이름 하나를 알려주는 명령은?",
+  "answer": "whoami입니다. who는 로그인 세션을 보여줍니다.",
+  "sources": [
+   [
+    "GNU Coreutils",
+    "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+   ],
+   [
+    "shutdown",
+    "https://man7.org/linux/man-pages/man8/shutdown.8.html"
+   ]
+  ]
+ },
+ {
+  "id": "mixed",
+  "title": "기본 명령어 섞어서 확인",
+  "minutes": 15,
+  "concepts": [
+   "file-commands",
+   "text-commands",
+   "permissions",
+   "ownership",
+   "search-commands",
+   "tar",
+   "compression",
+   "disk-usage",
+   "mount",
+   "ps",
+   "monitor",
+   "signals",
+   "job-control",
+   "user-commands",
+   "system-commands"
+  ],
+  "goal": "상황에 맞는 명령을 설명하고 고른다.",
+  "story": "명령어를 보기 전에 해야 할 작업을 한 문장으로 말하세요.",
+  "steps": [
+   "파일 이름·내용·명령 위치 중 무엇을 찾는지 확인하세요.",
+   "복사·이동·삭제, 권한·소유권, 남은 공간·경로 사용량을 구분하세요.",
+   "현재 셸의 작업인지 시스템 프로세스인지, 계정 생성인지 사용자 전환인지 확인하세요."
+  ],
+  "example": "디스크에 남은 공간 → df. 큰 폴더 찾기 → du. 현재 유효 사용자 → whoami.",
+  "recall": "오늘 헷갈린 두 명령의 차이를 설명할 수 있나요?",
+  "answer": "막힌 명령은 오답·헷갈림으로 표시하고 다음 복습에서 다시 확인하세요."
+ }
+];
 const CURRENT_COURSE_VERSION=4;
 function courseUnits(session){
+ if(session?.focus?.courseTrack==='basic')return window.BASIC_CURRICULUM;
  if(!session?.focus?.course)return window.STUDY_CURRICULUM;
  if(session.focus.courseVersion===4)return window.STUDY_CURRICULUM;
  if(session.focus.courseVersion===3)return window.STUDY_CURRICULUM_V3;
  if(session.focus.courseVersion===2)return window.STUDY_CURRICULUM_V2;
  return window.LEGACY_STUDY_CURRICULUM;
 }
-function courseMinutes(){return courseUnits().reduce((n,u)=>n+u.minutes,0);}
+function courseMinutes(units=courseUnits()){return units.reduce((n,u)=>n+u.minutes,0);}
 function coursePool(unit){return unit.concepts.flatMap(id=>conceptQuestions(CONCEPTS.find(c=>c.id===id)));}
-function courseItems(){
+function courseItems(units=courseUnits()){
   const seen=new Set();
-  return courseUnits().flatMap((unit,lesson)=>{
+  return units.flatMap((unit,lesson)=>{
     // Interleave concepts and reserve other questions for mixed review where possible.
     const pools=unit.concepts.map(id=>ranked(conceptQuestions(CONCEPTS.find(c=>c.id===id))).sort((a,b)=>(unit.id==='xfs'?Number(/xfs/i.test(b.prompt))-Number(/xfs/i.test(a.prompt)):0)||Number(seen.has(a.id))-Number(seen.has(b.id))));
     const picked=[];const target=unit.id==='mixed'?unit.concepts.length*2:6;
@@ -147,14 +456,24 @@ function courseItems(){
   });
 }
 function startCurriculum(restart=false){
-  if(!restart&&activeSession()&&state.session.focus?.course){go('session');return;}
+  if(!restart&&activeSession()&&state.session.focus?.course&&!state.session.focus.courseTrack){go('session');return;}
   if(activeSession()&&!confirm('맞춤 코스를 시작하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 기록은 유지됩니다. 시작할까요?'))return;
   recoverLastArchive();
   state.session={syncId:cryptoId(),mode:'practice',label:`맞춤 ${courseMinutes()}분 · 개념 이해 코스`,examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes()*MINUTE,index:0,items:courseItems(),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:CURRENT_COURSE_VERSION,conceptIds:courseUnits().at(-1).concepts}};
   save();go('session');
 }
+function startBasicCurriculum(){
+ if(activeSession()&&state.session.focus?.courseTrack==='basic'){go('session');return;}
+ if(activeSession()&&!confirm('기본 명령어 코스를 시작하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 기록은 유지됩니다. 시작할까요?'))return;
+ recoverLastArchive();const units=window.BASIC_CURRICULUM;
+ state.session={syncId:cryptoId(),mode:'practice',label:'기본 명령어 60분 코스',examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes(units)*MINUTE,index:0,items:courseItems(units),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:4,courseTrack:'basic',conceptIds:units.at(-1).concepts}};
+ save();go('session');
+}
+function basicCourseCard(){
+ return `<section class="panel"><h2>기본 명령어 60분 코스</h2><p>파일·디렉터리 → 파일 내용 → 권한 → 검색 → 압축 → 디스크 → 프로세스 → 사용자 → 시스템 → 종합 복습</p><p>9개 분야를 5분씩 이해하고 15분 동안 섞어서 확인합니다. 상황 예제와 자체 제작 문제·관련 기출로 연습합니다.</p><details><summary>배우는 명령어 전체 보기</summary>${window.BASIC_CURRICULUM.slice(0,-1).map(u=>`<p><strong>${esc(u.title)}</strong><br>${esc(u.goal)}</p>`).join('')}</details><p>${button(activeSession()&&state.session.focus?.courseTrack==='basic'?'기본 명령어 코스 이어서':'기본 명령어 코스 시작','start-basic-curriculum')}</p><p class="small">학습 범위 참고: <a href="https://programjy.tistory.com/entry/리눅스마스터2급2차정리" target="_blank" rel="noopener noreferrer">사용자 제공 정리 글</a> · 설명과 추가 문제는 별도 작성했으며 각 단계에 매뉴얼을 연결했습니다.</p></section>`;
+}
 function curriculumPage(){
-  main.innerHTML=heading('이해하고 반복하는 맞춤 코스',`특수 권한 → 우선순위 → 쿼터 → Bash → 패키지 → XFS → 압축·묶음 → 프린터 → IPv4 → 서브넷 → 종합 복습. 권장 ${courseMinutes()}분입니다.`)+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>기본 시간은 ${courseMinutes()}분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&state.session.focus.courseVersion!==CURRENT_COURSE_VERSION?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('IPv4 포함 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>오늘: 설명을 이해하고 코스를 1회 진행합니다. 내일: 같은 코스를 다시 풀면서 설명을 보기 전에 이유를 말합니다. 3일 뒤: 오답·복습 메뉴에서 남아 있는 문제를 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
+  main.innerHTML=heading('이해하고 반복하는 맞춤 코스',`특수 권한 → 우선순위 → 쿼터 → Bash → 패키지 → XFS → 압축·묶음 → 프린터 → IPv4 → 서브넷 → 종합 복습. 권장 ${courseMinutes()}분입니다.`)+basicCourseCard()+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>기본 시간은 ${courseMinutes()}분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course&&!state.session.focus.courseTrack?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&state.session.focus.courseVersion!==CURRENT_COURSE_VERSION?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('IPv4 포함 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>오늘: 설명을 이해하고 코스를 1회 진행합니다. 내일: 같은 코스를 다시 풀면서 설명을 보기 전에 이유를 말합니다. 3일 뒤: 오답·복습 메뉴에서 남아 있는 문제를 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
 }
 function courseIntro(){
   const s=state.session,it=s.items[s.index],u=courseUnits(s)[it.lesson];

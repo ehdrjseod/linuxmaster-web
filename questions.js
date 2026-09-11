@@ -3058,6 +3058,519 @@ window.QUESTION_BANK = {
       "explanation": "쉼표는 나열이다. 범위를 지정하는 하이픈과 다르다.",
       "memory": "분 시 일 월 요일 / , 나열 / - 범위 / */ 간격",
       "kind": "적용"
+    },
+    {
+      "id": "basic-001",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "현재 작업 디렉터리의 경로를 출력하는 명령은?",
+      "options": [
+        "pwd",
+        "ls",
+        "cd",
+        "mkdir"
+      ],
+      "answer": 0,
+      "explanation": "pwd는 현재 경로, ls는 디렉터리 항목 목록을 출력합니다.",
+      "memory": "pwd는 현재 경로, ls는 디렉터리 항목 목록을 출력합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-002",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "숨김 항목까지 긴 형식으로 목록을 확인하려면?",
+      "options": [
+        "ls -al",
+        "pwd -a",
+        "cd -l",
+        "mkdir -a"
+      ],
+      "answer": 0,
+      "explanation": "ls의 -a는 숨김 항목 포함, -l은 자세한 목록입니다.",
+      "memory": "ls의 -a는 숨김 항목 포함, -l은 자세한 목록입니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-003",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "상위 디렉터리로 이동하려면?",
+      "options": [
+        "cd ..",
+        "pwd ..",
+        "ls ..",
+        "mkdir .."
+      ],
+      "answer": 0,
+      "explanation": "cd는 이동합니다. ls ..는 상위 디렉터리 내용을 볼 뿐 현재 위치는 바꾸지 않습니다.",
+      "memory": "cd는 이동합니다. ls ..는 상위 디렉터리 내용을 볼 뿐 현재 위치는 바꾸지 않습니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/bash.html"
+    },
+    {
+      "id": "basic-004",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "없는 상위 경로까지 만들면서 work/log 디렉터리를 생성하려면?",
+      "options": [
+        "mkdir -p work/log",
+        "touch work/log",
+        "rmdir work/log",
+        "cd work/log"
+      ],
+      "answer": 0,
+      "explanation": "mkdir -p는 필요한 상위 디렉터리를 함께 만듭니다.",
+      "memory": "mkdir -p는 필요한 상위 디렉터리를 함께 만듭니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-005",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "rmdir와 rm -r의 차이를 올바르게 설명한 것은?",
+      "options": [
+        "rmdir는 빈 디렉터리만, rm -r은 내용이 있는 디렉터리도 제거한다",
+        "둘 다 빈 디렉터리만 제거한다",
+        "rmdir는 파일 복사, rm -r은 이동이다",
+        "둘 다 휴지통으로 이동한다"
+      ],
+      "answer": 0,
+      "explanation": "rmdir는 빈 디렉터리 제거용입니다. rm -r은 하위 항목까지 삭제하며 휴지통으로 보내지 않습니다.",
+      "memory": "rmdir는 빈 디렉터리 제거용입니다. rm -r은 하위 항목까지 삭제하며 휴지통으로 보내지 않습니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-006",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "내용이 있는 기존 파일 memo.txt에 touch memo.txt를 실행하면?",
+      "options": [
+        "기존 내용을 유지하며 시간 정보를 갱신한다",
+        "파일 내용을 모두 비운다",
+        "파일을 삭제한다",
+        "파일을 디렉터리로 바꾼다"
+      ],
+      "answer": 0,
+      "explanation": "touch는 시간 갱신 명령입니다. 파일이 없을 때 기본적으로 빈 파일을 만듭니다.",
+      "memory": "touch는 시간 갱신 명령입니다. 파일이 없을 때 기본적으로 빈 파일을 만듭니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-007",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "원본 a.txt를 남기고 b.txt를 만든 뒤 b.txt의 이름을 c.txt로 바꾸려면?",
+      "options": [
+        "cp a.txt b.txt 후 mv b.txt c.txt",
+        "mv a.txt b.txt 후 cp b.txt c.txt",
+        "rm a.txt 후 touch c.txt",
+        "cp a.txt b.txt 후 rmdir b.txt"
+      ],
+      "answer": 0,
+      "explanation": "cp는 원본을 남겨 복사하고 mv는 이동 또는 이름 변경을 합니다.",
+      "memory": "cp는 원본을 남겨 복사하고 mv는 이동 또는 이름 변경을 합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-008",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "파일 a.txt와 b.txt 내용을 순서대로 출력하려면?",
+      "options": [
+        "cat a.txt b.txt",
+        "cp a.txt b.txt",
+        "mv a.txt b.txt",
+        "touch a.txt b.txt"
+      ],
+      "answer": 0,
+      "explanation": "cat은 여러 파일 내용을 순서대로 표준 출력에 이어 보여줍니다.",
+      "memory": "cat은 여러 파일 내용을 순서대로 표준 출력에 이어 보여줍니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-009",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "파일 앞 5줄만 확인하려면?",
+      "options": [
+        "head -n 5 app.log",
+        "tail -n 5 app.log",
+        "cat -n app.log",
+        "ls -l app.log"
+      ],
+      "answer": 0,
+      "explanation": "head는 앞부분, tail은 뒷부분입니다. cat -n은 줄 번호를 붙여 출력합니다.",
+      "memory": "head는 앞부분, tail은 뒷부분입니다. cat -n은 줄 번호를 붙여 출력합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-010",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "파일의 마지막 20줄을 확인하려면?",
+      "options": [
+        "tail -n 20 app.log",
+        "head -n 20 app.log",
+        "touch app.log",
+        "pwd app.log"
+      ],
+      "answer": 0,
+      "explanation": "tail -n 20은 파일 끝 20줄을 출력합니다.",
+      "memory": "tail -n 20은 파일 끝 20줄을 출력합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-011",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "로그 파일에 새로 추가되는 내용을 계속 보려면?",
+      "options": [
+        "tail -f app.log",
+        "head -n 10 app.log",
+        "cat app.log",
+        "ls -al app.log"
+      ],
+      "answer": 0,
+      "explanation": "tail -f는 끝에 추가되는 내용을 계속 관찰합니다.",
+      "memory": "tail -f는 끝에 추가되는 내용을 계속 관찰합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-012",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "more와 less의 공통 역할은?",
+      "options": [
+        "긴 텍스트를 페이지 단위로 보기",
+        "파일의 소유자 변경",
+        "압축 파일 생성",
+        "프로세스 종료"
+      ],
+      "answer": 0,
+      "explanation": "more와 less는 텍스트 페이저입니다. less는 앞뒤 이동과 검색에 편리합니다.",
+      "memory": "more와 less는 텍스트 페이저입니다. less는 앞뒤 이동과 검색에 편리합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-013",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "현재 디렉터리 아래에서 이름이 .log로 끝나는 파일을 찾으려면?",
+      "options": [
+        "find . -name '*.log'",
+        "grep '*.log' .",
+        "which '*.log'",
+        "whereis '*.log'"
+      ],
+      "answer": 0,
+      "explanation": "find는 경로 아래에서 이름 등의 조건으로 찾습니다. 패턴은 따옴표로 감쌉니다.",
+      "memory": "find는 경로 아래에서 이름 등의 조건으로 찾습니다. 패턴은 따옴표로 감쌉니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/findutils/manual/html_mono/find.html"
+    },
+    {
+      "id": "basic-014",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "app.log 내용에서 ERROR가 있는 줄을 줄 번호와 함께 찾으려면?",
+      "options": [
+        "grep -n ERROR app.log",
+        "find app.log -name ERROR",
+        "which ERROR",
+        "whereis app.log"
+      ],
+      "answer": 0,
+      "explanation": "grep -n은 패턴과 일치하는 줄에 줄 번호를 붙입니다.",
+      "memory": "grep -n은 패턴과 일치하는 줄에 줄 번호를 붙입니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/grep/manual/grep.html"
+    },
+    {
+      "id": "basic-015",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "일반적으로 PATH에서 실행 파일의 위치를 찾는 명령은?",
+      "options": [
+        "which",
+        "grep",
+        "head",
+        "who"
+      ],
+      "answer": 0,
+      "explanation": "which는 PATH에서 실행 파일을 검색합니다. 셸 내장 명령·함수 해석까지 확인하려면 type을 사용합니다.",
+      "memory": "which는 PATH에서 실행 파일을 검색합니다. 셸 내장 명령·함수 해석까지 확인하려면 type을 사용합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/bash.html"
+    },
+    {
+      "id": "basic-016",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "명령의 바이너리·소스·매뉴얼 위치를 찾는 도구는?",
+      "options": [
+        "whereis",
+        "grep",
+        "tail",
+        "jobs"
+      ],
+      "answer": 0,
+      "explanation": "whereis는 명령 관련 바이너리·소스·매뉴얼 위치를 찾습니다.",
+      "memory": "whereis는 명령 관련 바이너리·소스·매뉴얼 위치를 찾습니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man1/whereis.1.html"
+    },
+    {
+      "id": "basic-017",
+      "topic": "package",
+      "page": 0,
+      "red": false,
+      "prompt": "docs 디렉터리와 하위 항목을 ZIP으로 묶어 압축하려면?",
+      "options": [
+        "zip -r backup.zip docs/",
+        "gzip docs/",
+        "gunzip backup.zip",
+        "unzip -r docs/"
+      ],
+      "answer": 0,
+      "explanation": "zip -r은 디렉터리의 하위 항목까지 ZIP 파일에 포함합니다. gzip은 ZIP 생성 명령이 아닙니다.",
+      "memory": "zip -r은 디렉터리의 하위 항목까지 ZIP 파일에 포함합니다. gzip은 ZIP 생성 명령이 아닙니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://infozip.sourceforge.net/"
+    },
+    {
+      "id": "basic-018",
+      "topic": "package",
+      "page": 0,
+      "red": false,
+      "prompt": "backup.zip과 app.log.gz를 각각 압축 해제하는 명령 조합은?",
+      "options": [
+        "unzip backup.zip / gunzip app.log.gz",
+        "gunzip backup.zip / unzip app.log.gz",
+        "tar -cf backup.zip / gzip app.log.gz",
+        "zip backup.zip / gzip app.log.gz"
+      ],
+      "answer": 0,
+      "explanation": "ZIP은 unzip, gzip 형식은 gunzip 또는 gzip -d로 해제합니다.",
+      "memory": "ZIP은 unzip, gzip 형식은 gunzip 또는 gzip -d로 해제합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://infozip.sourceforge.net/"
+    },
+    {
+      "id": "basic-019",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "alice 계정과 홈 디렉터리를 함께 만들려면?",
+      "options": [
+        "useradd -m alice",
+        "su - alice",
+        "passwd alice",
+        "who alice"
+      ],
+      "answer": 0,
+      "explanation": "useradd -m은 계정과 홈 디렉터리를 생성합니다.",
+      "memory": "useradd -m은 계정과 홈 디렉터리를 생성합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/useradd.8.html"
+    },
+    {
+      "id": "basic-020",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "계정을 삭제하며 홈 디렉터리와 메일 스풀도 제거하는 명령은?",
+      "options": [
+        "userdel -r alice",
+        "passwd -r alice",
+        "su - alice",
+        "useradd -r alice"
+      ],
+      "answer": 0,
+      "explanation": "userdel -r의 r은 홈·메일 스풀 제거입니다. useradd -r은 시스템 계정 생성으로 뜻이 다릅니다.",
+      "memory": "userdel -r의 r은 홈·메일 스풀 제거입니다. useradd -r은 시스템 계정 생성으로 뜻이 다릅니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/userdel.8.html"
+    },
+    {
+      "id": "basic-021",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "현재 사용자의 암호를 변경하는 명령은?",
+      "options": [
+        "passwd",
+        "whoami",
+        "useradd",
+        "chown"
+      ],
+      "answer": 0,
+      "explanation": "passwd는 암호 변경 명령이고 /etc/passwd는 계정 정보 파일입니다.",
+      "memory": "passwd는 암호 변경 명령이고 /etc/passwd는 계정 정보 파일입니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man1/passwd.1.html"
+    },
+    {
+      "id": "basic-022",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "기존 alice 사용자로 로그인과 유사한 환경을 갖추어 전환하려면?",
+      "options": [
+        "su - alice",
+        "useradd alice",
+        "userdel alice",
+        "passwd alice"
+      ],
+      "answer": 0,
+      "explanation": "su -는 로그인과 유사한 환경으로 사용자 전환을 합니다. 계정 생성은 useradd입니다.",
+      "memory": "su -는 로그인과 유사한 환경으로 사용자 전환을 합니다. 계정 생성은 useradd입니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man1/su.1.html"
+    },
+    {
+      "id": "basic-023",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "systemd 환경에서 10분 뒤 시스템 종료를 예약하려면?",
+      "options": [
+        "shutdown -h +10",
+        "reboot +10",
+        "date +10",
+        "who -h"
+      ],
+      "answer": 0,
+      "explanation": "shutdown의 +10은 10분 뒤를 뜻합니다.",
+      "memory": "shutdown의 +10은 10분 뒤를 뜻합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/shutdown.8.html"
+    },
+    {
+      "id": "basic-024",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "systemd 환경에서 예약한 shutdown을 취소하려면?",
+      "options": [
+        "shutdown -c",
+        "shutdown -r now",
+        "reboot",
+        "date -c"
+      ],
+      "answer": 0,
+      "explanation": "shutdown -c는 예약된 종료를 취소합니다.",
+      "memory": "shutdown -c는 예약된 종료를 취소합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/shutdown.8.html"
+    },
+    {
+      "id": "basic-025",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "시스템을 재부팅하도록 요청하는 명령은?",
+      "options": [
+        "reboot",
+        "who",
+        "date",
+        "pwd"
+      ],
+      "answer": 0,
+      "explanation": "reboot는 재부팅 요청이며 shutdown -r now도 즉시 재부팅 요청입니다.",
+      "memory": "reboot는 재부팅 요청이며 shutdown -r now도 즉시 재부팅 요청입니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/reboot.8.html"
+    },
+    {
+      "id": "basic-026",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "현재 날짜와 시간을 출력하는 명령은?",
+      "options": [
+        "date",
+        "whoami",
+        "jobs",
+        "pwd"
+      ],
+      "answer": 0,
+      "explanation": "date는 날짜·시간을 표시합니다. date +%F로 연-월-일 형식을 지정할 수 있습니다.",
+      "memory": "date는 날짜·시간을 표시합니다. date +%F로 연-월-일 형식을 지정할 수 있습니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "basic-027",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "who와 whoami의 차이는?",
+      "options": [
+        "who는 로그인 세션, whoami는 현재 유효 사용자 이름",
+        "who는 현재 경로, whoami는 파일 목록",
+        "who는 계정 생성, whoami는 계정 삭제",
+        "둘 다 모든 계정의 암호를 출력한다"
+      ],
+      "answer": 0,
+      "explanation": "who는 로그인 세션 정보를, whoami는 현재 유효 사용자 이름을 출력합니다.",
+      "memory": "who는 로그인 세션 정보를, whoami는 현재 유효 사용자 이름을 출력합니다.",
+      "kind": "자체 제작 · 기본 명령어",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
     }
   ]
 };
