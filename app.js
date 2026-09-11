@@ -80,7 +80,7 @@ function validateState(value){
   const s=value.session;
   if(s){
     if(!['exam','practice'].includes(s.mode) || typeof s.label!=='string'||s.label.length>100||!Array.isArray(s.items)||!s.items.length||s.items.length>1000||!Number.isInteger(s.index)||s.index<0||s.index>=s.items.length||!validNum(s.started)||!validNum(s.deadline)||typeof s.finished!=='boolean')return null;
-    if(s.focus?.course&&((s.focus.courseTrack!==undefined&&(s.focus.courseTrack!=='basic'||s.focus.courseVersion!==4))||(s.focus.courseVersion!==undefined&&![2,3,4].includes(s.focus.courseVersion))||!s.courseRead||typeof s.courseRead!=='object'||Array.isArray(s.courseRead)||Object.entries(s.courseRead).some(([k,v])=>!/^\d+$/.test(k)||Number(k)>=courseUnits(s).length||typeof v!=='boolean')||s.items.some(i=>!Number.isInteger(i.lesson)||i.lesson<0||i.lesson>=courseUnits(s).length)))return null;
+    if(s.focus?.course&&((s.focus.courseTrack!==undefined&&(!['basic','recall'].includes(s.focus.courseTrack)||s.focus.courseVersion!==4))||(s.focus.courseVersion!==undefined&&![2,3,4].includes(s.focus.courseVersion))||!s.courseRead||typeof s.courseRead!=='object'||Array.isArray(s.courseRead)||Object.entries(s.courseRead).some(([k,v])=>!/^\d+$/.test(k)||Number(k)>=courseUnits(s).length||typeof v!=='boolean')||s.items.some(i=>!Number.isInteger(i.lesson)||i.lesson<0||i.lesson>=courseUnits(s).length)))return null;
     if(s.focus!==undefined&&(!s.focus||s.mode!=='practice'||!Array.isArray(s.focus.conceptIds)||!s.focus.conceptIds.length||s.focus.conceptIds.length>(s.focus.course?courseUnits(s).at(-1).concepts.length:6)||!s.focus.conceptIds.every(id=>CONCEPTS.some(c=>c.id===id))))return null;
     if(!s.applied || typeof s.applied!=='object')return null;
     for(const item of s.items){
@@ -405,6 +405,7 @@ document.addEventListener('click',event=>{
     case 'retry-result':{const ids=[...new Set(s.items.filter(i=>i.checked&&(!isCorrect(BY_ID[i.id],i.selected)||i.unsure)).map(i=>i.id))];start(ids.map(id=>BY_ID[id]),'이번 오답 재도전','practice','all');break;}
     case 'start-curriculum':startCurriculum();break;
     case 'start-basic-curriculum':startBasicCurriculum();break;
+    case 'start-recall-curriculum':startBasicCurriculum('recall');break;
     case 'restart-curriculum':startCurriculum(true);break;
     case 'course-ready':courseReady();break;
     case 'course-unsure':courseUnsure();break;

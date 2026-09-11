@@ -54,3 +54,5 @@
 
 .timer-controls {display:flex;align-items:center;flex-wrap:wrap;gap:12px}
 .timer-controls .btn {white-space:nowrap}
+/* Preserve command/output lines in authored execution questions. */
+#question-title{white-space:pre-wrap;overflow-wrap:anywhere}

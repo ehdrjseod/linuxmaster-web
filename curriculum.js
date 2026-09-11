@@ -432,8 +432,132 @@ window.BASIC_CURRICULUM = [
   "answer": "막힌 명령은 오답·헷갈림으로 표시하고 다음 복습에서 다시 확인하세요."
  }
 ];
+window.RECALL_CURRICULUM = [
+ {
+  "id": "recall-fields",
+  "title": "출력 읽기: ls -l과 s·t 위치",
+  "minutes": 6,
+  "concepts": [
+   "file-commands",
+   "special-mode"
+  ],
+  "questionIds": [
+   "recall-001",
+   "recall-002",
+   "recall-003",
+   "recall-004"
+  ],
+  "goal": "명령 실행 조건을 읽고 결과의 이유를 설명한다.",
+  "story": "개인 복기를 바탕으로 보완한 유형 연습입니다. 실제 시험 원문·정답을 복원한 자료는 아닙니다.",
+  "steps": [
+   "ls -l의 순서는 종류·권한, 링크 수, 소유자, 그룹, 크기, 수정 시각, 이름입니다. 일반 파일의 크기는 바이트 단위입니다.",
+   "소유자 실행 위치 s는 Set-UID, 그룹 실행 위치 s는 Set-GID입니다. 기타 사용자 실행 위치 t는 Sticky bit입니다.",
+   "대문자 S/T는 해당 위치의 실행 비트가 없다는 뜻입니다. 글자만 보지 말고 위치까지 읽으세요."
+  ],
+  "example": "-rwsr-xr-x → 소유자 위치 s → Set-UID. -rwxr-sr-x → 그룹 위치 s → Set-GID.",
+  "recall": "-rwsr-xr-x의 s를 Sticky bit로 고르면 왜 틀릴까요?",
+  "answer": "Sticky bit는 기타 사용자 실행 위치의 t/T이며, 이 s는 소유자 위치의 Set-UID입니다.",
+  "sources": [
+   [
+    "Bash 실행 환경",
+    "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+   ]
+  ]
+ },
+ {
+  "id": "recall-shell",
+  "title": "실행 결과: 변수·export·따옴표·unalias",
+  "minutes": 12,
+  "concepts": [
+   "variables",
+   "alias"
+  ],
+  "questionIds": [
+   "recall-005",
+   "recall-006",
+   "recall-007",
+   "recall-008",
+   "recall-009",
+   "recall-010",
+   "recall-011",
+   "recall-012"
+  ],
+  "goal": "명령 실행 조건을 읽고 결과의 이유를 설명한다.",
+  "story": "개인 복기를 바탕으로 보완한 유형 연습입니다. 실제 시험 원문·정답을 복원한 자료는 아닙니다.",
+  "steps": [
+   "환경변수는 시스템 전체에 자동 적용되는 값이 아닙니다. 프로세스가 가진 환경을 새 자식 프로세스에 전달합니다.",
+   "일반 Bash 변수에 export 속성을 주면 자식 실행 환경에 포함됩니다. 자식이 값을 바꿔도 부모 셸에는 되돌아오지 않습니다.",
+   "작은따옴표는 변수 확장을 막습니다. 큰따옴표 안에서는 $변수가 확장됩니다. 명령 문자열을 어느 셸이 해석하는지 확인하세요.",
+   "인자 없는 set은 Bash 변수·함수, env는 환경을 표시합니다. echo \"$PATH\"는 PATH 값 출력입니다.",
+   "unalias 뒤에는 별칭 이름을 씁니다. unalias -a는 현재 셸의 모든 별칭 해제이며 시작 파일의 정의를 지우지는 않습니다."
+  ],
+  "example": "LM_RECALL=linux; echo '$LM_RECALL' → 글자 그대로. echo \"$LM_RECALL\" → linux.",
+  "recall": "export한 변수를 자식 셸이 바꾸면 부모 값도 바뀌나요?",
+  "answer": "아니요. 부모와 자식은 각각 환경을 가지며 자식의 변경이 부모로 역전파되지 않습니다.",
+  "sources": [
+   [
+    "Bash 실행 환경",
+    "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+   ]
+  ]
+ },
+ {
+  "id": "recall-runtime",
+  "title": "실행 주체: 자식 셸·source·systemd",
+  "minutes": 6,
+  "concepts": [
+   "shell-family",
+   "boot-target"
+  ],
+  "questionIds": [
+   "recall-013",
+   "recall-014",
+   "recall-015",
+   "recall-016"
+  ],
+  "goal": "명령 실행 조건을 읽고 결과의 이유를 설명한다.",
+  "story": "개인 복기를 바탕으로 보완한 유형 연습입니다. 실제 시험 원문·정답을 복원한 자료는 아닙니다.",
+  "steps": [
+   "bash f.sh는 자식 Bash에서 실행하고 source ./f.sh는 현재 셸에서 실행합니다. 그래서 변수 변경 결과가 다릅니다.",
+   "Bash에서 sh -c를 실행해도 문자열은 실행된 sh가 해석합니다. /bin/sh 구현과 사용 가능한 문법은 환경에 따라 다릅니다.",
+   "Rocky Linux의 최초 정식 버전은 8.4입니다. Rocky Linux 7이라는 개인 복기 표기는 잘못되었으며 어떤 배포판을 뜻했는지는 원문 문제 없이는 확정하지 않습니다.",
+   "Rocky Linux 8/9의 systemd·systemctl과 기본 부팅 타깃을 구분하세요. set-default는 기본값 설정이며 즉시 상태 전환은 아닙니다."
+  ],
+  "example": "변수 변경이 현재 셸에 남는가? source인지 새 셸 실행인지 먼저 확인하세요.",
+  "recall": "부모가 Bash이면 sh -c 안의 문법도 반드시 Bash 문법인가요?",
+  "answer": "아니요. 호출한 sh가 해석하므로 해당 구현의 문법을 기준으로 봐야 합니다.",
+  "sources": [
+   [
+    "Bash 실행 환경",
+    "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+   ]
+  ]
+ },
+ {
+  "id": "mixed",
+  "title": "복기 유형 섞어서 재확인",
+  "minutes": 6,
+  "concepts": [
+   "file-commands",
+   "special-mode",
+   "variables",
+   "alias",
+   "shell-family",
+   "boot-target"
+  ],
+  "goal": "익숙한 키워드를 실행 조건과 연결한다.",
+  "story": "보기 번호보다 조건과 결과의 관계를 설명하세요.",
+  "steps": [
+   "권한 글자의 위치, 변수의 export 여부, 따옴표, 실행하는 셸을 차례로 확인합니다."
+  ],
+  "example": "같은 변수 이름이어도 부모·자식에 따라 값이 다를 수 있습니다.",
+  "recall": "왜 그 결과인지 한 문장으로 설명할 수 있나요?",
+  "answer": "이유가 막히면 헷갈림으로 표시하고 다시 풀어 보세요."
+ }
+];
 const CURRENT_COURSE_VERSION=4;
 function courseUnits(session){
+ if(session?.focus?.courseTrack==='recall')return window.RECALL_CURRICULUM;
  if(session?.focus?.courseTrack==='basic')return window.BASIC_CURRICULUM;
  if(!session?.focus?.course)return window.STUDY_CURRICULUM;
  if(session.focus.courseVersion===4)return window.STUDY_CURRICULUM;
@@ -448,7 +572,9 @@ function courseItems(units=courseUnits()){
   return units.flatMap((unit,lesson)=>{
     // Interleave concepts and reserve other questions for mixed review where possible.
     const pools=unit.concepts.map(id=>ranked(conceptQuestions(CONCEPTS.find(c=>c.id===id))).sort((a,b)=>(unit.id==='xfs'?Number(/xfs/i.test(b.prompt))-Number(/xfs/i.test(a.prompt)):0)||Number(seen.has(a.id))-Number(seen.has(b.id))));
-    const picked=[];const target=unit.id==='mixed'?unit.concepts.length*2:6;
+    const picked=(unit.questionIds||[]).map(id=>BY_ID[id]);picked.forEach(q=>seen.add(q.id));
+    pools.forEach((p,i)=>pools[i]=p.filter(q=>!picked.some(it=>it.id===q.id)));
+    const target=unit.id==='mixed'?unit.concepts.length*2:Math.max(6,picked.length);
     for(let n=0;picked.length<target&&pools.some(p=>p.length);n++){
       const p=pools[n%pools.length];if(p.length){const q=p.shift();picked.push(q);seen.add(q.id);}
     }
@@ -462,18 +588,20 @@ function startCurriculum(restart=false){
   state.session={syncId:cryptoId(),mode:'practice',label:`맞춤 ${courseMinutes()}분 · 개념 이해 코스`,examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes()*MINUTE,index:0,items:courseItems(),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:CURRENT_COURSE_VERSION,conceptIds:courseUnits().at(-1).concepts}};
   save();go('session');
 }
-function startBasicCurriculum(){
- if(activeSession()&&state.session.focus?.courseTrack==='basic'){go('session');return;}
- if(activeSession()&&!confirm('기본 명령어 코스를 시작하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 기록은 유지됩니다. 시작할까요?'))return;
- recoverLastArchive();const units=window.BASIC_CURRICULUM;
- state.session={syncId:cryptoId(),mode:'practice',label:'기본 명령어 60분 코스',examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes(units)*MINUTE,index:0,items:courseItems(units),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:4,courseTrack:'basic',conceptIds:units.at(-1).concepts}};
+function startBasicCurriculum(track='basic'){
+ const isRecall=track==='recall';
+ if(activeSession()&&state.session.focus?.courseTrack===track){go('session');return;}
+ if(activeSession()&&!confirm('이 코스를 시작하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 기록은 유지됩니다. 시작할까요?'))return;
+ recoverLastArchive();const units=isRecall?window.RECALL_CURRICULUM:window.BASIC_CURRICULUM;
+ state.session={syncId:cryptoId(),mode:'practice',label:isRecall?'복기 유형 보완 30분 코스':'기본 명령어 60분 코스',examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes(units)*MINUTE,index:0,items:courseItems(units),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:4,courseTrack:track,conceptIds:units.at(-1).concepts}};
  save();go('session');
 }
+function recallCourseCard(){return `<section class="panel"><h2>복기 유형 보완 30분 코스</h2><p>ls -l 필드·s/t 위치 → 변수 상속·따옴표·unalias → 자식 셸·source·systemd → 종합 복습</p><p>개인 복기의 모호한 설명을 확인하고 자체 제작한 16문항을 먼저 연습합니다. 실제 시험 원문을 복원한 문제는 아닙니다. df/du·마운트·XFS·작업 제어는 기존 코스에서 복습할 수 있습니다.</p>${button(activeSession()&&state.session.focus?.courseTrack==='recall'?'복기 유형 코스 이어서':'복기 유형 보완 코스 시작','start-recall-curriculum')}</section>`;}
 function basicCourseCard(){
  return `<section class="panel"><h2>기본 명령어 60분 코스</h2><p>파일·디렉터리 → 파일 내용 → 권한 → 검색 → 압축 → 디스크 → 프로세스 → 사용자 → 시스템 → 종합 복습</p><p>9개 분야를 5분씩 이해하고 15분 동안 섞어서 확인합니다. 상황 예제와 자체 제작 문제·관련 기출로 연습합니다.</p><details><summary>배우는 명령어 전체 보기</summary>${window.BASIC_CURRICULUM.slice(0,-1).map(u=>`<p><strong>${esc(u.title)}</strong><br>${esc(u.goal)}</p>`).join('')}</details><p>${button(activeSession()&&state.session.focus?.courseTrack==='basic'?'기본 명령어 코스 이어서':'기본 명령어 코스 시작','start-basic-curriculum')}</p><p class="small">학습 범위 참고: <a href="https://programjy.tistory.com/entry/리눅스마스터2급2차정리" target="_blank" rel="noopener noreferrer">사용자 제공 정리 글</a> · 설명과 추가 문제는 별도 작성했으며 각 단계에 매뉴얼을 연결했습니다.</p></section>`;
 }
 function curriculumPage(){
-  main.innerHTML=heading('이해하고 반복하는 맞춤 코스',`특수 권한 → 우선순위 → 쿼터 → Bash → 패키지 → XFS → 압축·묶음 → 프린터 → IPv4 → 서브넷 → 종합 복습. 권장 ${courseMinutes()}분입니다.`)+basicCourseCard()+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>기본 시간은 ${courseMinutes()}분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course&&!state.session.focus.courseTrack?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&state.session.focus.courseVersion!==CURRENT_COURSE_VERSION?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('IPv4 포함 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>오늘: 설명을 이해하고 코스를 1회 진행합니다. 내일: 같은 코스를 다시 풀면서 설명을 보기 전에 이유를 말합니다. 3일 뒤: 오답·복습 메뉴에서 남아 있는 문제를 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
+  main.innerHTML=heading('이해하고 반복하는 맞춤 코스',`특수 권한 → 우선순위 → 쿼터 → Bash → 패키지 → XFS → 압축·묶음 → 프린터 → IPv4 → 서브넷 → 종합 복습. 권장 ${courseMinutes()}분입니다.`)+recallCourseCard()+basicCourseCard()+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>기본 시간은 ${courseMinutes()}분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course&&!state.session.focus.courseTrack?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&state.session.focus.courseVersion!==CURRENT_COURSE_VERSION?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('IPv4 포함 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>오늘: 설명을 이해하고 코스를 1회 진행합니다. 내일: 같은 코스를 다시 풀면서 설명을 보기 전에 이유를 말합니다. 3일 뒤: 오답·복습 메뉴에서 남아 있는 문제를 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
 }
 function courseIntro(){
   const s=state.session,it=s.items[s.index],u=courseUnits(s)[it.lesson];

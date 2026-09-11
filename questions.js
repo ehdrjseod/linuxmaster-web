@@ -3571,6 +3571,310 @@ window.QUESTION_BANK = {
       "kind": "자체 제작 · 기본 명령어",
       "authored": true,
       "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+    },
+    {
+      "id": "recall-001",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "ls -l 출력이 다음과 같다. 숫자 3과 1200의 의미는?\n-rw-r--r-- 3 alice dev 1200 Sep 11 10:00 memo.txt",
+      "options": [
+        "3은 하드 링크 수, 1200은 파일 크기(바이트)",
+        "3은 파일 크기, 1200은 PID",
+        "3은 소유자 UID, 1200은 그룹 GID",
+        "3은 수정 횟수, 1200은 디스크 여유 공간"
+      ],
+      "answer": 0,
+      "explanation": "첫 필드 뒤 숫자는 하드 링크 수입니다. 소유자 alice, 그룹 dev 다음 1200은 일반 파일 크기(바이트)입니다.",
+      "memory": "첫 필드 뒤 숫자는 하드 링크 수입니다. 소유자 alice, 그룹 dev 다음 1200은 일반 파일 크기(바이트)입니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/What-information-is-listed.html"
+    },
+    {
+      "id": "recall-002",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "기본 ls -l 출력의 날짜·시간 필드는 일반적으로 무엇인가?",
+      "options": [
+        "파일 내용의 최종 수정 시각(mtime)",
+        "항상 파일 생성 시각",
+        "마지막 로그인 시각",
+        "현재 시스템 시각"
+      ],
+      "answer": 0,
+      "explanation": "기본 ls -l의 시간은 mtime입니다. -u나 -c 등 옵션으로 다른 시간 정보를 선택할 수 있습니다.",
+      "memory": "기본 ls -l의 시간은 mtime입니다. -u나 -c 등 옵션으로 다른 시간 정보를 선택할 수 있습니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/What-information-is-listed.html"
+    },
+    {
+      "id": "recall-003",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "일반 실행 파일 권한이 -rwsr-xr-x이다. 소유자 실행 위치의 s는?",
+      "options": [
+        "Set-UID와 소유자 실행 비트가 함께 설정됨",
+        "Set-GID만 설정됨",
+        "Sticky bit만 설정됨",
+        "소유자 실행 비트가 없는 Set-UID"
+      ],
+      "answer": 0,
+      "explanation": "소유자 실행 위치의 s는 Set-UID입니다. 그룹 실행 위치라면 Set-GID이며 Sticky bit는 기타 사용자 실행 위치의 t/T입니다. 실제 실행에 적용되는지는 파일 종류·마운트 옵션 등의 제약도 받습니다.",
+      "memory": "소유자 실행 위치의 s는 Set-UID입니다. 그룹 실행 위치라면 Set-GID이며 Sticky bit는 기타 사용자 실행 위치의 t/T입니다. 실제 실행에 적용되는지는 파일 종류·마운트 옵션 등의 제약도 받습니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/Mode-Structure.html"
+    },
+    {
+      "id": "recall-004",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "다음 권한에서 특수 비트를 순서대로 연결한 것은?\n-rwxr-sr-x / drwxrwxrwt",
+      "options": [
+        "Set-GID / Sticky bit",
+        "Set-UID / Set-GID",
+        "Sticky bit / Set-UID",
+        "Set-UID / Sticky bit"
+      ],
+      "answer": 0,
+      "explanation": "그룹 실행 위치 s는 Set-GID, 기타 사용자 실행 위치 t는 Sticky bit입니다. Sticky bit 디렉터리는 일반적으로 파일 소유자·디렉터리 소유자·권한 있는 관리자에게 삭제를 허용합니다.",
+      "memory": "그룹 실행 위치 s는 Set-GID, 기타 사용자 실행 위치 t는 Sticky bit입니다. Sticky bit 디렉터리는 일반적으로 파일 소유자·디렉터리 소유자·권한 있는 관리자에게 삭제를 허용합니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/Mode-Structure.html"
+    },
+    {
+      "id": "recall-005",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "초기 환경에 LM_RECALL 변수가 없고 시작 파일을 읽지 않는 Bash에서 실행한다. 출력은?\nLM_RECALL=linux; bash --noprofile --norc -c 'printf \"<%s>\\n\" \"$LM_RECALL\"' ",
+      "options": [
+        "<>",
+        "<linux>",
+        "<$LM_RECALL>",
+        "<bash>"
+      ],
+      "answer": 0,
+      "explanation": "export하지 않은 변수는 새 Bash 실행 환경으로 전달되지 않습니다. 자식의 LM_RECALL은 미설정이므로 빈 문자열입니다.",
+      "memory": "export하지 않은 변수는 새 Bash 실행 환경으로 전달되지 않습니다. 자식의 LM_RECALL은 미설정이므로 빈 문자열입니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html"
+    },
+    {
+      "id": "recall-006",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "초기 환경에 LM_RECALL 변수가 없고 시작 파일을 읽지 않는 Bash에서 실행한다. 출력은?\nexport LM_RECALL=linux; bash --noprofile --norc -c 'echo \"$LM_RECALL\"' ",
+      "options": [
+        "linux",
+        "빈 줄",
+        "$LM_RECALL",
+        "export"
+      ],
+      "answer": 0,
+      "explanation": "export는 이후 실행하는 자식 프로세스의 환경에 변수를 넣습니다. 이미 실행 중인 다른 터미널 전체를 바꾸는 명령은 아닙니다.",
+      "memory": "export는 이후 실행하는 자식 프로세스의 환경에 변수를 넣습니다. 이미 실행 중인 다른 터미널 전체를 바꾸는 명령은 아닙니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html"
+    },
+    {
+      "id": "recall-007",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "초기 환경에 LM_RECALL 변수가 없고 시작 파일을 읽지 않는 Bash에서 실행한다. 마지막 출력은?\nexport LM_RECALL=parent; bash --noprofile --norc -c 'LM_RECALL=child'; echo \"$LM_RECALL\"",
+      "options": [
+        "parent",
+        "child",
+        "빈 줄",
+        "parent child"
+      ],
+      "answer": 0,
+      "explanation": "자식 프로세스에서 변수 값을 바꿔도 부모 셸의 변수는 바뀌지 않습니다.",
+      "memory": "자식 프로세스에서 변수 값을 바꿔도 부모 셸의 변수는 바뀌지 않습니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+    },
+    {
+      "id": "recall-008",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "초기 환경에 LM_RECALL 변수가 없고 시작 파일을 읽지 않는 Bash에서 실행한다. 두 출력의 순서는?\nLM_RECALL=linux; echo '$LM_RECALL'; echo \"$LM_RECALL\"",
+      "options": [
+        "$LM_RECALL 다음 linux",
+        "linux 다음 linux",
+        "빈 줄 다음 linux",
+        "linux 다음 $LM_RECALL"
+      ],
+      "answer": 0,
+      "explanation": "작은따옴표는 변수 확장을 막고 큰따옴표 안에서는 변수 확장이 일어납니다.",
+      "memory": "작은따옴표는 변수 확장을 막고 큰따옴표 안에서는 변수 확장이 일어납니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Quoting.html"
+    },
+    {
+      "id": "recall-009",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "Bash에서 인자 없이 실행한 set, env와 echo \"$PATH\"의 역할을 올바르게 연결하면?",
+      "options": [
+        "set: 셸 변수·함수 표시 / env: 환경 표시 / echo: PATH 값 출력",
+        "set: 환경만 표시 / env: 모든 셸 함수 표시 / echo: PATH 삭제",
+        "set: 변수 삭제 / env: 파일 검색 / echo: 셸 변경",
+        "세 명령 모두 시스템 전체의 환경을 변경"
+      ],
+      "answer": 0,
+      "explanation": "인자 없는 set은 Bash 변수와 함수를 표시하며 env는 전달받은 환경을 보여줍니다. echo \"$PATH\"는 PATH의 값을 출력합니다.",
+      "memory": "인자 없는 set은 Bash 변수와 함수를 표시하며 env는 전달받은 환경을 보여줍니다. echo \"$PATH\"는 PATH의 값을 출력합니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html"
+    },
+    {
+      "id": "recall-010",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "환경변수의 적용 범위에 대한 정확한 설명은?",
+      "options": [
+        "프로세스가 환경을 가지며 자식 실행 시 전달된다",
+        "설정 즉시 모든 사용자·터미널에 자동 적용된다",
+        "자식이 바꾸면 부모 값도 자동 변경된다",
+        "셸 변수와 환경변수는 항상 별개의 값으로 중복 저장된다"
+      ],
+      "answer": 0,
+      "explanation": "환경은 프로세스별입니다. Bash 변수에 export 속성을 주면 자식 실행 환경에 포함됩니다. 시스템 전체가 공유하는 전역 저장소가 아닙니다.",
+      "memory": "환경은 프로세스별입니다. Bash 변수에 export 속성을 주면 자식 실행 환경에 포함됩니다. 시스템 전체가 공유하는 전역 저장소가 아닙니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html"
+    },
+    {
+      "id": "recall-011",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "alias ll='ls -al'을 설정했다. 현재 셸에서 ll 별칭만 해제하려면?",
+      "options": [
+        "unalias ll",
+        "unalias ls -al",
+        "unset ll",
+        "rm ll"
+      ],
+      "answer": 0,
+      "explanation": "unalias 뒤에는 별칭 이름을 씁니다. 원래 명령 문자열이나 파일 이름을 삭제하는 것이 아닙니다.",
+      "memory": "unalias 뒤에는 별칭 이름을 씁니다. 원래 명령 문자열이나 파일 이름을 삭제하는 것이 아닙니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html"
+    },
+    {
+      "id": "recall-012",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "Bash의 unalias -a는 무엇을 하는가?",
+      "options": [
+        "현재 셸의 모든 별칭 해제",
+        "모든 환경변수 삭제",
+        "모든 실행 파일 삭제",
+        "모든 사용자의 .bashrc 수정"
+      ],
+      "answer": 0,
+      "explanation": "-a는 현재 셸의 모든 별칭을 해제합니다. .bashrc의 정의를 지우지 않으므로 새 셸에서 다시 설정될 수 있습니다.",
+      "memory": "-a는 현재 셸의 모든 별칭을 해제합니다. .bashrc의 정의를 지우지 않으므로 새 셸에서 다시 설정될 수 있습니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html"
+    },
+    {
+      "id": "recall-013",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "초기 환경에 LM_RECALL 변수가 없고 시작 파일을 읽지 않는 Bash에서 실행한다. 명령 결과를 결정하는 셸에 대한 설명은?\nsh -c 'echo hello' ",
+      "options": [
+        "sh로 실행된 프로그램이 문자열을 해석한다",
+        "부모가 Bash이면 항상 Bash 문법만 적용된다",
+        "로그인 셸이 자동으로 영구 변경된다",
+        "어떤 셸에서 실행하든 모든 문법은 동일하다"
+      ],
+      "answer": 0,
+      "explanation": "부모 Bash는 sh를 실행합니다. -c 문자열은 실행된 sh가 해석하며 /bin/sh가 가리키는 구현은 시스템에 따라 다릅니다. 이것만으로 로그인 셸 설정이 바뀌지는 않습니다.",
+      "memory": "부모 Bash는 sh를 실행합니다. -c 문자열은 실행된 sh가 해석하며 /bin/sh가 가리키는 구현은 시스템에 따라 다릅니다. 이것만으로 로그인 셸 설정이 바뀌지는 않습니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+    },
+    {
+      "id": "recall-014",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "초기 환경에 LM_RECALL 변수가 없고 시작 파일을 읽지 않는 Bash에서 실행한다. f.sh 내용은 LM_RECALL=child 한 줄이다.\nLM_RECALL=parent; bash --noprofile --norc f.sh; echo \"$LM_RECALL\"; source ./f.sh; echo \"$LM_RECALL\"\n두 출력은?",
+      "options": [
+        "parent 다음 child",
+        "child 다음 child",
+        "parent 다음 parent",
+        "빈 줄 다음 child"
+      ],
+      "answer": 0,
+      "explanation": "bash f.sh는 자식 셸에서 실행하므로 부모 값은 유지됩니다. source는 현재 셸에서 파일을 읽어 실행하므로 현재 값이 바뀝니다.",
+      "memory": "bash f.sh는 자식 셸에서 실행하므로 부모 값은 유지됩니다. source는 현재 셸에서 파일을 읽어 실행하므로 현재 값이 바뀝니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+    },
+    {
+      "id": "recall-015",
+      "topic": "xwindow",
+      "page": 0,
+      "red": false,
+      "prompt": "Rocky Linux 8/9의 표준 설치에서 시스템·서비스 관리에 사용하는 조합은?",
+      "options": [
+        "systemd / systemctl",
+        "SysV init / unalias",
+        "CUPS / lpq",
+        "Bash / chmod"
+      ],
+      "answer": 0,
+      "explanation": "Rocky Linux 8/9의 시스템·서비스 관리는 systemd와 systemctl을 연결합니다. 개인 복기의 Rocky Linux 7이라는 버전 표기는 사용하지 않습니다.",
+      "memory": "Rocky Linux 8/9의 시스템·서비스 관리는 systemd와 systemctl을 연결합니다. 개인 복기의 Rocky Linux 7이라는 버전 표기는 사용하지 않습니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://docs.rockylinux.org/ko/books/admin_guide/10-boot/"
+    },
+    {
+      "id": "recall-016",
+      "topic": "xwindow",
+      "page": 0,
+      "red": false,
+      "prompt": "systemctl get-default와 systemctl set-default multi-user.target을 구분한 설명은?",
+      "options": [
+        "기본 부팅 타깃 조회 / 다음 부팅 등에 사용할 기본 타깃 설정",
+        "현재 디렉터리 조회 / 파일 권한 변경",
+        "프로세스 종료 / 즉시 재부팅",
+        "설치 패키지 조회 / 패키지 삭제"
+      ],
+      "answer": 0,
+      "explanation": "get-default는 기본 타깃을 조회하고 set-default는 기본 타깃을 설정합니다. 현재 실행 상태를 즉시 전환하는 isolate와 구분합니다.",
+      "memory": "get-default는 기본 타깃을 조회하고 set-default는 기본 타깃을 설정합니다. 현재 실행 상태를 즉시 전환하는 isolate와 구분합니다.",
+      "kind": "자체 제작 · 복기 유형 보완",
+      "authored": true,
+      "reference": "https://www.freedesktop.org/software/systemd/man/latest/systemctl.html"
     }
   ]
 };
