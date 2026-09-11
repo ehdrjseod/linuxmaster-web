@@ -3589,7 +3589,8 @@ window.QUESTION_BANK = {
       "memory": "첫 필드 뒤 숫자는 하드 링크 수입니다. 소유자 alice, 그룹 dev 다음 1200은 일반 파일 크기(바이트)입니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/What-information-is-listed.html"
+      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/What-information-is-listed.html",
+      "recallEvidence": "복기에 ls -l 필드와 s 의미가 언급됨. 제시된 전체 출력·질문·보기는 재구성."
     },
     {
       "id": "recall-002",
@@ -3608,7 +3609,8 @@ window.QUESTION_BANK = {
       "memory": "기본 ls -l의 시간은 mtime입니다. -u나 -c 등 옵션으로 다른 시간 정보를 선택할 수 있습니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/What-information-is-listed.html"
+      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/What-information-is-listed.html",
+      "recallEvidence": "복기에 ls -l 필드와 s 의미가 언급됨. 제시된 전체 출력·질문·보기는 재구성."
     },
     {
       "id": "recall-003",
@@ -3627,7 +3629,8 @@ window.QUESTION_BANK = {
       "memory": "소유자 실행 위치의 s는 Set-UID입니다. 그룹 실행 위치라면 Set-GID이며 Sticky bit는 기타 사용자 실행 위치의 t/T입니다. 실제 실행에 적용되는지는 파일 종류·마운트 옵션 등의 제약도 받습니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/Mode-Structure.html"
+      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/Mode-Structure.html",
+      "recallEvidence": "복기에 ls -l 필드와 s 의미가 언급됨. 제시된 전체 출력·질문·보기는 재구성."
     },
     {
       "id": "recall-004",
@@ -3646,7 +3649,8 @@ window.QUESTION_BANK = {
       "memory": "그룹 실행 위치 s는 Set-GID, 기타 사용자 실행 위치 t는 Sticky bit입니다. Sticky bit 디렉터리는 일반적으로 파일 소유자·디렉터리 소유자·권한 있는 관리자에게 삭제를 허용합니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/Mode-Structure.html"
+      "reference": "https://www.gnu.org/software/coreutils/manual/html_node/Mode-Structure.html",
+      "recallEvidence": "복기에 ls -l 필드와 s 의미가 언급됨. 제시된 전체 출력·질문·보기는 재구성."
     },
     {
       "id": "recall-005",
@@ -3665,7 +3669,8 @@ window.QUESTION_BANK = {
       "memory": "export하지 않은 변수는 새 Bash 실행 환경으로 전달되지 않습니다. 자식의 LM_RECALL은 미설정이므로 빈 문자열입니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-006",
@@ -3684,7 +3689,8 @@ window.QUESTION_BANK = {
       "memory": "export는 이후 실행하는 자식 프로세스의 환경에 변수를 넣습니다. 이미 실행 중인 다른 터미널 전체를 바꾸는 명령은 아닙니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-007",
@@ -3703,7 +3709,8 @@ window.QUESTION_BANK = {
       "memory": "자식 프로세스에서 변수 값을 바꿔도 부모 셸의 변수는 바뀌지 않습니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-008",
@@ -3722,7 +3729,8 @@ window.QUESTION_BANK = {
       "memory": "작은따옴표는 변수 확장을 막고 큰따옴표 안에서는 변수 확장이 일어납니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Quoting.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Quoting.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-009",
@@ -3741,7 +3749,8 @@ window.QUESTION_BANK = {
       "memory": "인자 없는 set은 Bash 변수와 함수를 표시하며 env는 전달받은 환경을 보여줍니다. echo \"$PATH\"는 PATH의 값을 출력합니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-010",
@@ -3760,7 +3769,8 @@ window.QUESTION_BANK = {
       "memory": "환경은 프로세스별입니다. Bash 변수에 export 속성을 주면 자식 실행 환경에 포함됩니다. 시스템 전체가 공유하는 전역 저장소가 아닙니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Environment.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-011",
@@ -3779,7 +3789,8 @@ window.QUESTION_BANK = {
       "memory": "unalias 뒤에는 별칭 이름을 씁니다. 원래 명령 문자열이나 파일 이름을 삭제하는 것이 아닙니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-012",
@@ -3798,7 +3809,8 @@ window.QUESTION_BANK = {
       "memory": "-a는 현재 셸의 모든 별칭을 해제합니다. .bashrc의 정의를 지우지 않으므로 새 셸에서 다시 설정될 수 있습니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-013",
@@ -3817,7 +3829,8 @@ window.QUESTION_BANK = {
       "memory": "부모 Bash는 sh를 실행합니다. -c 문자열은 실행된 sh가 해석하며 /bin/sh가 가리키는 구현은 시스템에 따라 다릅니다. 이것만으로 로그인 셸 설정이 바뀌지는 않습니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-014",
@@ -3836,7 +3849,8 @@ window.QUESTION_BANK = {
       "memory": "bash f.sh는 자식 셸에서 실행하므로 부모 값은 유지됩니다. source는 현재 셸에서 파일을 읽어 실행하므로 현재 값이 바뀝니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html"
+      "reference": "https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html",
+      "recallEvidence": "복기에 set/env/echo·변수 범위·unalias·다른 셸 실행 결과가 언급됨. 세부 명령·값·보기는 확장 구성."
     },
     {
       "id": "recall-015",
@@ -3855,7 +3869,8 @@ window.QUESTION_BANK = {
       "memory": "Rocky Linux 8/9의 시스템·서비스 관리는 systemd와 systemctl을 연결합니다. 개인 복기의 Rocky Linux 7이라는 버전 표기는 사용하지 않습니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://docs.rockylinux.org/ko/books/admin_guide/10-boot/"
+      "reference": "https://docs.rockylinux.org/ko/books/admin_guide/10-boot/",
+      "recallEvidence": "복기에 systemd와 Rocky Linux 7이 언급됨. 버전 오류를 바로잡고 Rocky 8/9 또는 systemctl 조건으로 새로 구성."
     },
     {
       "id": "recall-016",
@@ -3874,7 +3889,248 @@ window.QUESTION_BANK = {
       "memory": "get-default는 기본 타깃을 조회하고 set-default는 기본 타깃을 설정합니다. 현재 실행 상태를 즉시 전환하는 isolate와 구분합니다.",
       "kind": "자체 제작 · 복기 유형 보완",
       "authored": true,
-      "reference": "https://www.freedesktop.org/software/systemd/man/latest/systemctl.html"
+      "reference": "https://www.freedesktop.org/software/systemd/man/latest/systemctl.html",
+      "recallEvidence": "복기에 systemd와 Rocky Linux 7이 언급됨. 버전 오류를 바로잡고 Rocky 8/9 또는 systemctl 조건으로 새로 구성."
+    },
+    {
+      "id": "recall-017",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "다음 출력의 전체 용량·사용량·여유 공간을 파일 시스템별로 확인하는 명령은?\nFilesystem   Size  Used  Avail  Use%  Mounted on\n/dev/sdb1    100G   40G    60G   40%  /data",
+      "options": [
+        "df -h",
+        "du -sh /data",
+        "ls -l /data",
+        "mount -t ext4"
+      ],
+      "answer": 0,
+      "explanation": "df는 파일 시스템 공간 정보를 보여줍니다. 예시 수치는 문제 이해를 위해 단순화했으며 du는 경로가 차지한 디스크 사용량입니다.",
+      "memory": "df는 파일 시스템 공간 정보를 보여줍니다. 예시 수치는 문제 이해를 위해 단순화했으며 du는 경로가 차지한 디스크 사용량입니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html",
+      "recallEvidence": "복기에 df와 du 차이 출제가 언급됨. 출력 표와 수치는 새로 구성."
+    },
+    {
+      "id": "recall-018",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "/data 디렉터리 아래 파일들이 차지한 디스크 사용량을 합계 한 줄로 보려면?",
+      "options": [
+        "du -sh /data",
+        "df -h /data",
+        "pwd /data",
+        "ls -a /data"
+      ],
+      "answer": 0,
+      "explanation": "du -s는 경로 사용량 합계, -h는 읽기 쉬운 단위입니다. df /data는 /data가 속한 파일 시스템의 공간을 보여줍니다.",
+      "memory": "du -s는 경로 사용량 합계, -h는 읽기 쉬운 단위입니다. df /data는 /data가 속한 파일 시스템의 공간을 보여줍니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/coreutils/manual/coreutils.html",
+      "recallEvidence": "복기에 디렉터리별 사용량과 파일 시스템 사용량 구분이 언급됨. 경로·보기는 새로 구성."
+    },
+    {
+      "id": "recall-019",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "이미 /data에 연결된 파일 시스템을 연결 해제하는 명령은?",
+      "options": [
+        "umount /data",
+        "unmount /data",
+        "mount -r /data",
+        "fsck /data"
+      ],
+      "answer": 0,
+      "explanation": "철자는 umount입니다. fsck는 검사·복구 관련 명령으로 연결 해제가 아닙니다.",
+      "memory": "철자는 umount입니다. fsck는 검사·복구 관련 명령으로 연결 해제가 아닙니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/umount.8.html",
+      "recallEvidence": "복기에 mount/umount 및 철자 혼동이 언급됨. 경로·보기는 새로 구성."
+    },
+    {
+      "id": "recall-020",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "ext4 파일 시스템 /dev/sdb1을 /data에 연결하려면?",
+      "options": [
+        "mount -t ext4 /dev/sdb1 /data",
+        "mount /data /dev/sdb1 -t xfs",
+        "umount -t ext4 /data",
+        "mkfs.ext4 /data"
+      ],
+      "answer": 0,
+      "explanation": "mount -t 유형 장치 마운트지점 순서입니다. mkfs는 생성·포맷이고 umount는 연결 해제입니다.",
+      "memory": "mount -t 유형 장치 마운트지점 순서입니다. mkfs는 생성·포맷이고 umount는 연결 해제입니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/mount.8.html",
+      "recallEvidence": "복기에 마운트 관련 문제와 뒤에 붙는 인자 확인 필요성이 언급됨. ext4·장치·경로 조건은 추가."
+    },
+    {
+      "id": "recall-021",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "/data를 마운트 해제했을 때 의미로 알맞은 것은?",
+      "options": [
+        "해당 파일 시스템과 마운트 지점의 연결을 해제함",
+        "파일 시스템을 포맷함",
+        "모든 파일을 휴지통으로 옮김",
+        "손상된 파일을 자동 복구함"
+      ],
+      "answer": 0,
+      "explanation": "umount는 연결 해제입니다. 파일 삭제나 포맷, 파일 시스템 오류 수리와 구분합니다.",
+      "memory": "umount는 연결 해제입니다. 파일 삭제나 포맷, 파일 시스템 오류 수리와 구분합니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/umount.8.html",
+      "recallEvidence": "복기에 마운트 해제와 fsck/XFS가 혼재함. 작업의 의미를 분리한 확장 연습."
+    },
+    {
+      "id": "recall-022",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "마운트된 XFS에 일반적인 오프라인 점검·복구를 수행할 때 맞는 설명은?",
+      "options": [
+        "사용을 중지하고 마운트를 해제한 뒤 xfs_repair로 점검·복구한다",
+        "mkfs.xfs로 기존 파일 시스템을 복구한다",
+        "unmount 명령이 파일 시스템 오류를 수리한다",
+        "e2fsck가 XFS 전용 복구 도구이다"
+      ],
+      "answer": 0,
+      "explanation": "일반적인 xfs_repair 복구 대상은 마운트 해제 상태여야 합니다. mkfs.xfs는 새 파일 시스템 생성이고 e2fsck는 ext 계열 도구입니다.",
+      "memory": "일반적인 xfs_repair 복구 대상은 마운트 해제 상태여야 합니다. mkfs.xfs는 새 파일 시스템 생성이고 e2fsck는 ext 계열 도구입니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/xfs_repair.8.html",
+      "recallEvidence": "복기의 fsck xfs 해제는 원문이 불명확함. XFS 오프라인 복구 조건을 새로 명시한 확장 연습."
+    },
+    {
+      "id": "recall-023",
+      "topic": "files",
+      "page": 0,
+      "red": false,
+      "prompt": "마운트 해제한 파일 시스템에 xfs_repair -n /dev/sdb1을 실행하는 목적은?",
+      "options": [
+        "파일 시스템을 수정하지 않고 점검한다",
+        "강제로 로그를 지운다",
+        "새 파일 시스템을 만든다",
+        "파일 시스템을 마운트한다"
+      ],
+      "answer": 0,
+      "explanation": "xfs_repair -n은 수정 없는 점검입니다. -L처럼 로그를 강제로 지우는 옵션과 다릅니다.",
+      "memory": "xfs_repair -n은 수정 없는 점검입니다. -L처럼 로그를 강제로 지우는 옵션과 다릅니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://man7.org/linux/man-pages/man8/xfs_repair.8.html",
+      "recallEvidence": "복기에 XFS 점검 관련 표현만 있음. -n 옵션·장치·보기는 추가한 확장 연습."
+    },
+    {
+      "id": "recall-024",
+      "topic": "process",
+      "page": 0,
+      "red": false,
+      "prompt": "작업 제어가 가능한 대화형 Bash에서 sleep 100 &를 실행하면?",
+      "options": [
+        "셸은 명령 완료를 기다리지 않고 다음 입력을 받을 수 있다",
+        "sleep이 종료될 때까지 반드시 입력할 수 없다",
+        "sleep을 즉시 강제 종료한다",
+        "sleep의 PID를 100으로 설정한다"
+      ],
+      "answer": 0,
+      "explanation": "끝의 &는 비동기 백그라운드 실행을 요청합니다. 100은 sleep 대기 시간이지 PID나 작업 번호가 아닙니다.",
+      "memory": "끝의 &는 비동기 백그라운드 실행을 요청합니다. 100은 sleep 대기 시간이지 PID나 작업 번호가 아닙니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/bash.html#Job-Control",
+      "recallEvidence": "복기에 sleep 100 & 예시와 Background/Foreground 구분이 직접 언급됨. 질문·보기는 재구성."
+    },
+    {
+      "id": "recall-025",
+      "topic": "process",
+      "page": 0,
+      "red": false,
+      "prompt": "대화형 Bash의 jobs 출력이 [2]+ Stopped sleep 100 이다. 이 작업을 백그라운드에서 재개하려면?",
+      "options": [
+        "bg %2",
+        "fg %2",
+        "bg 100",
+        "kill -9 2"
+      ],
+      "answer": 0,
+      "explanation": "bg %2는 셸 작업 번호 2를 백그라운드에서 재개합니다. fg는 포그라운드로 가져옵니다. sleep의 100과 작업 번호 2를 구분하세요.",
+      "memory": "bg %2는 셸 작업 번호 2를 백그라운드에서 재개합니다. fg는 포그라운드로 가져옵니다. sleep의 100과 작업 번호 2를 구분하세요.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/bash.html#Job-Control-Builtins",
+      "recallEvidence": "복기에 bg/fg가 언급됨. Stopped 출력·작업 번호·명령 조건은 새로 구성."
+    },
+    {
+      "id": "recall-026",
+      "topic": "process",
+      "page": 0,
+      "red": false,
+      "prompt": "작업 번호 2를 포그라운드로 전환하는 명령과 현재 셸의 작업 목록 명령은?",
+      "options": [
+        "fg %2 / jobs",
+        "bg %2 / ps -ef",
+        "kill %2 / top",
+        "fg 100 / pwd"
+      ],
+      "answer": 0,
+      "explanation": "fg %2는 작업 번호 2를 앞으로 가져오고 jobs는 현재 셸의 작업 목록을 보여줍니다.",
+      "memory": "fg %2는 작업 번호 2를 앞으로 가져오고 jobs는 현재 셸의 작업 목록을 보여줍니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/bash.html#Job-Control-Builtins",
+      "recallEvidence": "복기에 Foreground/Background 단어와 bg/fg가 언급됨. 작업 번호와 목록 조회는 확장 연습."
+    },
+    {
+      "id": "recall-027",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "시작 파일을 읽지 않는 Bash에서 다음을 순서대로 실행한다. 두 출력은?\nLM_RECALL=parent\nenv LM_RECALL=child bash --noprofile --norc -c 'echo \"$LM_RECALL\"'\necho \"$LM_RECALL\"",
+      "options": [
+        "child 다음 parent",
+        "parent 다음 child",
+        "child 다음 child",
+        "빈 줄 다음 parent"
+      ],
+      "answer": 0,
+      "explanation": "env는 실행할 명령의 환경을 지정할 수 있습니다. 자식 환경에 child를 넣어도 부모 셸의 parent는 바뀌지 않습니다.",
+      "memory": "env는 실행할 명령의 환경을 지정할 수 있습니다. 자식 환경에 child를 넣어도 부모 셸의 parent는 바뀌지 않습니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/bash.html#Environment",
+      "recallEvidence": "복기에 env와 셸 실행 결과 유형이 언급됨. 변수 이름·값·실행 문자열은 검증용으로 새로 구성."
+    },
+    {
+      "id": "recall-028",
+      "topic": "shell",
+      "page": 0,
+      "red": false,
+      "prompt": "Bash에서 PATH=/opt/tools:/usr/bin을 설정한 뒤 echo \"$PATH\"를 실행하면?",
+      "options": [
+        "/opt/tools:/usr/bin",
+        "$PATH",
+        "/opt/tools 안의 파일 목록",
+        "현재 작업 디렉터리"
+      ],
+      "answer": 0,
+      "explanation": "echo \"$PATH\"는 변수 값을 출력합니다. PATH의 콜론은 명령 검색 디렉터리의 구분자입니다.",
+      "memory": "echo \"$PATH\"는 변수 값을 출력합니다. PATH의 콜론은 명령 검색 디렉터리의 구분자입니다.",
+      "kind": "자체 제작 · 복기 기반 재구성",
+      "authored": true,
+      "reference": "https://www.gnu.org/software/bash/manual/bash.html#Shell-Variables",
+      "recallEvidence": "복기에 echo $PATH 예시가 직접 언급됨. PATH 값과 보기는 새로 구성."
     }
   ]
 };

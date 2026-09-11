@@ -48,7 +48,7 @@ const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&
 const pct = (n,d) => d ? Math.round(n/d*100) : 0;
 const dateLabel = n => new Date(n).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const bar = value => `<div class="bar" role="progressbar" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"><span style="width:${value}%"></span></div>`;
-const sourceLink = q => q.authored ? `<span class="small muted">자체 제작 연습문제 · 원본 기출 아님</span> <a class="source-link" href="${esc(q.reference)}" target="_blank" rel="noopener noreferrer">참고 매뉴얼 ↗</a>` : window.STATIC_CBT ? '<span class="small muted">정적 배포본에는 원본 PDF가 포함되지 않습니다.</span>' : q.examDate?`<a class="source-link" href="${q.source}#page=${q.page}" target="_blank" rel="noopener">원본 해설집 ${q.page}쪽 보기 ↗</a>`:`<a class="source-link" href="${encodeURIComponent(BANK.source)}#page=${q.page}" target="_blank" rel="noopener">정리본 ${q.page}쪽 보기 ↗</a>`;
+const sourceLink = q => q.authored ? `<span class="small muted">자체 제작 연습문제 · 원본 기출 아님</span> <a class="source-link" href="${esc(q.reference)}" target="_blank" rel="noopener noreferrer">참고 매뉴얼 ↗</a>${q.recallEvidence?`<details><summary>복기 근거와 재구성 범위</summary><p>${esc(q.recallEvidence)}</p><p>사용자 제공 2601회 개인 복기 기준 · 원문과 문항 번호·보기 순서 미확인 · 정답은 위 매뉴얼로 검증</p></details>`:''}` : window.STATIC_CBT ? '<span class="small muted">정적 배포본에는 원본 PDF가 포함되지 않습니다.</span>' : q.examDate?`<a class="source-link" href="${q.source}#page=${q.page}" target="_blank" rel="noopener">원본 해설집 ${q.page}쪽 보기 ↗</a>`:`<a class="source-link" href="${encodeURIComponent(BANK.source)}#page=${q.page}" target="_blank" rel="noopener">정리본 ${q.page}쪽 보기 ↗</a>`;
 const stat = (label,value,suffix,hint) => `<div class="stat"><div class="stat-label">${label}<span>↗</span></div><strong>${value}<small>${suffix}</small></strong><small>${hint}</small></div>`;
 const heading = (title,sub,aside='') => `<div class="heading"><div><h1>${title}</h1><p>${sub}</p></div>${aside}</div>`;
 const button = (text, action, extra='', cls='') => `<button class="btn ${cls}" data-action="${action}" ${extra}>${text}</button>`;
@@ -80,7 +80,7 @@ function validateState(value){
   const s=value.session;
   if(s){
     if(!['exam','practice'].includes(s.mode) || typeof s.label!=='string'||s.label.length>100||!Array.isArray(s.items)||!s.items.length||s.items.length>1000||!Number.isInteger(s.index)||s.index<0||s.index>=s.items.length||!validNum(s.started)||!validNum(s.deadline)||typeof s.finished!=='boolean')return null;
-    if(s.focus?.course&&((s.focus.courseTrack!==undefined&&(!['basic','recall'].includes(s.focus.courseTrack)||s.focus.courseVersion!==4))||(s.focus.courseVersion!==undefined&&![2,3,4].includes(s.focus.courseVersion))||!s.courseRead||typeof s.courseRead!=='object'||Array.isArray(s.courseRead)||Object.entries(s.courseRead).some(([k,v])=>!/^\d+$/.test(k)||Number(k)>=courseUnits(s).length||typeof v!=='boolean')||s.items.some(i=>!Number.isInteger(i.lesson)||i.lesson<0||i.lesson>=courseUnits(s).length)))return null;
+    if(s.focus?.course&&((s.focus.recallVersion!==undefined&&(s.focus.courseTrack!=='recall'||s.focus.recallVersion!==2))||(s.focus.courseTrack!==undefined&&(!['basic','recall'].includes(s.focus.courseTrack)||s.focus.courseVersion!==4))||(s.focus.courseVersion!==undefined&&![2,3,4].includes(s.focus.courseVersion))||!s.courseRead||typeof s.courseRead!=='object'||Array.isArray(s.courseRead)||Object.entries(s.courseRead).some(([k,v])=>!/^\d+$/.test(k)||Number(k)>=courseUnits(s).length||typeof v!=='boolean')||s.items.some(i=>!Number.isInteger(i.lesson)||i.lesson<0||i.lesson>=courseUnits(s).length)))return null;
     if(s.focus!==undefined&&(!s.focus||s.mode!=='practice'||!Array.isArray(s.focus.conceptIds)||!s.focus.conceptIds.length||s.focus.conceptIds.length>(s.focus.course?courseUnits(s).at(-1).concepts.length:6)||!s.focus.conceptIds.every(id=>CONCEPTS.some(c=>c.id===id))))return null;
     if(!s.applied || typeof s.applied!=='object')return null;
     for(const item of s.items){
@@ -406,6 +406,7 @@ document.addEventListener('click',event=>{
     case 'start-curriculum':startCurriculum();break;
     case 'start-basic-curriculum':startBasicCurriculum();break;
     case 'start-recall-curriculum':startBasicCurriculum('recall');break;
+    case 'restart-recall-curriculum':startBasicCurriculum('recall',true);break;
     case 'restart-curriculum':startCurriculum(true);break;
     case 'course-ready':courseReady();break;
     case 'course-unsure':courseUnsure();break;

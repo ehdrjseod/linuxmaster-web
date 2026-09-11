@@ -555,9 +555,19 @@ window.RECALL_CURRICULUM = [
   "answer": "이유가 막히면 헷갈림으로 표시하고 다시 풀어 보세요."
  }
 ];
+window.RECALL_CURRICULUM_V1 = window.RECALL_CURRICULUM;
+window.RECALL_CURRICULUM = [
+ window.RECALL_CURRICULUM_V1[0],
+ {...window.RECALL_CURRICULUM_V1[1],questionIds:[...window.RECALL_CURRICULUM_V1[1].questionIds,'recall-027','recall-028']},
+ window.RECALL_CURRICULUM_V1[2],
+ {id:'recall-disk',title:'디스크: df·du·연결 해제·XFS 점검',minutes:6,concepts:['disk-usage','mount','fsck'],questionIds:['recall-017','recall-018','recall-019','recall-020','recall-021','recall-022','recall-023'],
+ goal:'공간 조회·마운트·점검을 서로 다른 작업으로 구분한다.',story:'복기에 나온 디스크 관련 단서를 한 흐름으로 묶습니다. 해제와 복구를 같은 작업으로 외우지 마세요.',steps:['df는 파일 시스템의 공간, du는 경로가 차지한 공간입니다.','mount는 연결, umount는 연결 해제입니다. unmount가 아닙니다.','XFS의 일반적인 오프라인 복구에는 xfs_repair를 사용하며 마운트를 해제해야 합니다. -n은 수정 없이 점검합니다.'],example:'df -h로 공간 확인 → du -sh /data로 경로 사용량 확인. 오류 점검·복구는 별도 작업입니다.',recall:'umount와 xfs_repair는 무엇이 다른가요?',answer:'umount는 연결 해제, xfs_repair는 XFS 점검·복구입니다.'},
+ {id:'recall-jobs',title:'작업 제어: &·bg·fg·jobs',minutes:4,concepts:['job-control'],questionIds:['recall-024','recall-025','recall-026'],goal:'실행 상태와 셸 작업 번호를 읽는다.',story:'먼저 실행할 때 뒤로 보낼지, 정지된 작업을 재개할지, 앞으로 가져올지 구분하세요.',steps:['명령 끝의 &는 백그라운드 실행을 요청합니다.','정지된 작업은 bg %번호로 뒤에서 재개하고 fg %번호로 앞으로 가져옵니다.','jobs의 작업 번호, 프로세스 PID, sleep의 시간 인자는 서로 다릅니다.'],example:'[2] Stopped sleep 100 → bg %2. 앞에서 실행하려면 fg %2.',recall:'sleep 100의 100을 bg 뒤에 붙여야 하나요?',answer:'아니요. sleep의 시간 인자와 jobs에서 확인한 작업 번호를 구분하세요.'},
+ {...window.RECALL_CURRICULUM_V1.at(-1),concepts:[...window.RECALL_CURRICULUM_V1.at(-1).concepts,'disk-usage','mount','fsck','job-control']}
+];
 const CURRENT_COURSE_VERSION=4;
 function courseUnits(session){
- if(session?.focus?.courseTrack==='recall')return window.RECALL_CURRICULUM;
+ if(session?.focus?.courseTrack==='recall')return session.focus.recallVersion===2?window.RECALL_CURRICULUM:window.RECALL_CURRICULUM_V1;
  if(session?.focus?.courseTrack==='basic')return window.BASIC_CURRICULUM;
  if(!session?.focus?.course)return window.STUDY_CURRICULUM;
  if(session.focus.courseVersion===4)return window.STUDY_CURRICULUM;
@@ -588,15 +598,15 @@ function startCurriculum(restart=false){
   state.session={syncId:cryptoId(),mode:'practice',label:`맞춤 ${courseMinutes()}분 · 개념 이해 코스`,examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes()*MINUTE,index:0,items:courseItems(),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:CURRENT_COURSE_VERSION,conceptIds:courseUnits().at(-1).concepts}};
   save();go('session');
 }
-function startBasicCurriculum(track='basic'){
+function startBasicCurriculum(track='basic',restart=false){
  const isRecall=track==='recall';
- if(activeSession()&&state.session.focus?.courseTrack===track){go('session');return;}
+ if(!restart&&activeSession()&&state.session.focus?.courseTrack===track){go('session');return;}
  if(activeSession()&&!confirm('이 코스를 시작하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 기록은 유지됩니다. 시작할까요?'))return;
  recoverLastArchive();const units=isRecall?window.RECALL_CURRICULUM:window.BASIC_CURRICULUM;
- state.session={syncId:cryptoId(),mode:'practice',label:isRecall?'복기 유형 보완 30분 코스':'기본 명령어 60분 코스',examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes(units)*MINUTE,index:0,items:courseItems(units),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:4,courseTrack:track,conceptIds:units.at(-1).concepts}};
+ state.session={syncId:cryptoId(),mode:'practice',label:isRecall?'복기 유형 재구성 40분 코스':'기본 명령어 60분 코스',examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes(units)*MINUTE,index:0,items:courseItems(units),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:4,courseTrack:track,...(isRecall?{recallVersion:2}:{}),conceptIds:units.at(-1).concepts}};
  save();go('session');
 }
-function recallCourseCard(){return `<section class="panel"><h2>복기 유형 보완 30분 코스</h2><p>ls -l 필드·s/t 위치 → 변수 상속·따옴표·unalias → 자식 셸·source·systemd → 종합 복습</p><p>개인 복기의 모호한 설명을 확인하고 자체 제작한 16문항을 먼저 연습합니다. 실제 시험 원문을 복원한 문제는 아닙니다. df/du·마운트·XFS·작업 제어는 기존 코스에서 복습할 수 있습니다.</p>${button(activeSession()&&state.session.focus?.courseTrack==='recall'?'복기 유형 코스 이어서':'복기 유형 보완 코스 시작','start-recall-curriculum')}</section>`;}
+function recallCourseCard(){return `<section class="panel"><h2>복기 유형 재구성 40분 코스</h2><p>ls -l·특수 권한 → 변수·별칭 → 셸 실행·systemd → 디스크·XFS → 작업 제어 → 종합 복습</p><p>복기에서 재구성한 28문항을 모두 포함하며 관련 문제와 종합 복습까지 기본 55문항입니다. 출제 단서는 사용자 제공 2601회 개인 복기이며, 각 해설에 새로 구성한 조건과 보기를 표시합니다. 실제 시험 원문·문항 번호·A/B형 보기 순서는 확인되지 않았습니다.</p>${button(activeSession()&&state.session.focus?.courseTrack==='recall'?'복기 유형 코스 이어서':'복기 유형 재구성 코스 시작','start-recall-curriculum')}${activeSession()&&state.session.focus?.courseTrack==='recall'&&state.session.focus.recallVersion!==2?button('28문항 포함 새 코스 시작','restart-recall-curriculum','','secondary'):''}<details><summary>복기 정보의 한계와 정정 내용</summary><p>환경변수는 시스템 전체 공유값이 아니라 자식 실행 환경에 전달됩니다. -rwsr-xr-x의 s는 소유자 위치의 Set-UID입니다. Rocky Linux 7이라는 표기는 잘못되어 8/9 기준으로 보완했습니다. 모호한 셸·XFS 문장은 조건을 명시한 확장 문제로 만들었으며 실제 출제 문장이라고 단정하지 않습니다.</p></details></section>`;}
 function basicCourseCard(){
  return `<section class="panel"><h2>기본 명령어 60분 코스</h2><p>파일·디렉터리 → 파일 내용 → 권한 → 검색 → 압축 → 디스크 → 프로세스 → 사용자 → 시스템 → 종합 복습</p><p>9개 분야를 5분씩 이해하고 15분 동안 섞어서 확인합니다. 상황 예제와 자체 제작 문제·관련 기출로 연습합니다.</p><details><summary>배우는 명령어 전체 보기</summary>${window.BASIC_CURRICULUM.slice(0,-1).map(u=>`<p><strong>${esc(u.title)}</strong><br>${esc(u.goal)}</p>`).join('')}</details><p>${button(activeSession()&&state.session.focus?.courseTrack==='basic'?'기본 명령어 코스 이어서':'기본 명령어 코스 시작','start-basic-curriculum')}</p><p class="small">학습 범위 참고: <a href="https://programjy.tistory.com/entry/리눅스마스터2급2차정리" target="_blank" rel="noopener noreferrer">사용자 제공 정리 글</a> · 설명과 추가 문제는 별도 작성했으며 각 단계에 매뉴얼을 연결했습니다.</p></section>`;
 }
