@@ -589,7 +589,54 @@ window.STUDY_CURRICULUM_V4 = window.STUDY_CURRICULUM;
  window.STUDY_CURRICULUM=[...original,...extra,mixed];
 }
 const CURRENT_COURSE_VERSION=5;
+// Source-specific courses keep old combined sessions intact.
+function courseMatchesSource(id,source){return typeof id==='string'&&(!source||(source==='past'?id.startsWith('past-'):!id.startsWith('past-')));}
+function sourceCourseUnits(source,topic='all'){
+ const concepts=window.CONCEPT_NOTES.concepts.filter(c=>(topic==='all'||c.topic===topic)&&c.questionIds.some(id=>courseMatchesSource(id,source)));
+ if(!concepts.length)return [];
+ const units=concepts.map(c=>{
+  const ids=c.questionIds.filter(id=>courseMatchesSource(id,source));
+  const count=source==='past'?1:ids.length;
+  return {id:'source-'+c.id,title:c.title,concepts:[c.id],source,questionCount:count,
+   questionIds:source==='past'?[]:ids,minutes:Math.max(2,Math.ceil(count*.75+1)),
+   goal:'개념을 읽고 선택한 출처의 문제로 확인한다.',story:c.summary,
+   steps:[c.pitfall,...c.comparison.map(([name,meaning])=>name+' → '+meaning)],
+   example:c.example,recall:c.title+'의 판단 기준을 설명해 보세요.',answer:c.summary+' '+c.pitfall};
+ });
+ return [...units,{id:'mixed',title:'선택한 범위 종합 복습',concepts:concepts.map(c=>c.id),source,mixedPerConcept:1,
+  minutes:Math.max(1,Math.ceil(concepts.length*.75)),goal:'개념마다 한 문제로 다시 확인한다.',
+  story:'앞에서 푼 문제와 다른 문제를 우선합니다. 해당 출처에 문제가 하나뿐인 개념은 같은 문제를 다시 풉니다.',
+  steps:['정답 번호보다 판단 이유를 떠올리세요.','틀리거나 헷갈린 문제는 같은 단계에서 다시 연습합니다.'],
+  example:'명령의 목적 → 적용 대상 → 옵션 의미 순서로 해석합니다.',recall:'선택한 답이 맞는 이유를 설명할 수 있나요?',answer:'설명하기 어렵다면 헷갈림으로 표시하고 해설을 다시 읽으세요.'}];
+}
+function sourceCourseStats(source,topic='all'){
+ const units=sourceCourseUnits(source,topic);
+ return {units,concepts:units.at(-1)?.concepts.length||0,minutes:courseMinutes(units),
+  questions:units.reduce((n,u)=>n+(u.id==='mixed'?u.concepts.length:u.questionCount),0)};
+}
+function startSourceCurriculum(source,topic='all'){
+ if(!['past','nonpast'].includes(source)||!(topic==='all'||window.QUESTION_BANK.topics.some(t=>t.id===topic)))return;
+ if(activeSession()&&state.session.focus?.courseSource===source&&state.session.focus.courseTopic===topic){go('session');return;}
+ const units=sourceCourseUnits(source,topic);if(!units.length)return;
+ if(activeSession()&&!confirm('선택한 학습으로 전환하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 풀이·오답 기록은 유지됩니다. 전환할까요?'))return;
+ recoverLastArchive();
+ const name=source==='past'?'기출문제 학습':'기출 외 개념 학습';
+ const topicName=topic==='all'?'전체':window.QUESTION_BANK.topics.find(t=>t.id===topic).name;
+ const now=Date.now();
+ state.session={syncId:cryptoId(),mode:'practice',label:name+' · '+topicName,examDate:null,started:now,deadline:now+courseMinutes(units)*MINUTE,index:0,items:courseItems(units),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:5,courseSource:source,courseTopic:topic,conceptIds:units.at(-1).concepts}};
+ save();go('session');
+}
+function sourceCourseCard(source){
+ const stats=sourceCourseStats(source),name=source==='past'?'기출문제 학습':'기출 외 개념 학습';
+ const description=source==='past'?'등록된 기출에서 개념별 대표 문제를 골라 풉니다. 960문항 전체를 풀려면 기출시험 메뉴를 이용하세요.':'요약본 기반·자체 제작·복기 재구성 문제 231개를 모두 포함합니다. 기출과 겹치는 개념도 있으며, 새로운 시험 범위만을 뜻하지 않습니다.';
+ const rows=window.QUESTION_BANK.topics.map(t=>{
+  const part=sourceCourseStats(source,t.id);if(!part.questions)return '';
+  return `<article class="panel"><h3>${esc(t.name)}</h3><p>${part.concepts}개 개념 · ${part.questions}문항 · 권장 ${part.minutes}분</p>${button('이 분야 시작','start-source-curriculum',`data-source="${source}" data-topic="${t.id}"`)}</article>`;
+ }).join('');
+ return `<section class="panel"><h2>${name}</h2><p>${description}</p><p>전체 ${stats.concepts}개 개념 · 기본 ${stats.questions}문항 · 권장 ${stats.minutes}분. 종합 복습을 포함한 수이며 오답 반복은 추가됩니다.</p><p>시간이 짧다면 아래에서 한 분야만 선택하세요.</p><div class="topic-grid">${rows}</div><details><summary>전체 분야 한 번에 학습</summary><p>${button(name+' 전체 시작','start-source-curriculum',`data-source="${source}" data-topic="all"`,'secondary')}</p></details></section>`;
+}
 function courseUnits(session){
+ if(session?.focus?.courseSource)return sourceCourseUnits(session.focus.courseSource,session.focus.courseTopic);
  if(session?.focus?.courseTrack==='recall')return session.focus.recallVersion===2?window.RECALL_CURRICULUM:window.RECALL_CURRICULUM_V1;
  if(session?.focus?.courseTrack==='basic')return window.BASIC_CURRICULUM;
  if(!session?.focus?.course)return window.STUDY_CURRICULUM;
@@ -605,10 +652,10 @@ function courseItems(units=courseUnits()){
   const seen=new Set();
   return units.flatMap((unit,lesson)=>{
     // Interleave concepts and reserve other questions for mixed review where possible.
-    const pools=unit.concepts.map(id=>ranked(conceptQuestions(CONCEPTS.find(c=>c.id===id))).sort((a,b)=>(unit.id==='xfs'?Number(/xfs/i.test(b.prompt))-Number(/xfs/i.test(a.prompt)):0)||Number(seen.has(a.id))-Number(seen.has(b.id))));
+    const pools=unit.concepts.map(id=>ranked(conceptQuestions(CONCEPTS.find(c=>c.id===id)).filter(q=>courseMatchesSource(q.id,unit.source))).sort((a,b)=>(unit.id==='xfs'?Number(/xfs/i.test(b.prompt))-Number(/xfs/i.test(a.prompt)):0)||Number(seen.has(a.id))-Number(seen.has(b.id))));
     const picked=(unit.questionIds||[]).map(id=>BY_ID[id]);picked.forEach(q=>seen.add(q.id));
-    pools.forEach((p,i)=>{const available=p.filter(q=>!picked.some(it=>it.id===q.id));pools[i]=unit.id==='mixed'?available.slice(0,2):available;});
-    const target=unit.id==='mixed'?unit.concepts.length*2:Math.max(unit.questionCount||6,picked.length);
+    pools.forEach((p,i)=>{const available=p.filter(q=>!picked.some(it=>it.id===q.id));pools[i]=unit.id==='mixed'?available.slice(0,unit.mixedPerConcept||2):available;});
+    const target=unit.id==='mixed'?unit.concepts.length*(unit.mixedPerConcept||2):Math.max(unit.questionCount||6,picked.length);
     for(let n=0;picked.length<target&&pools.some(p=>p.length);n++){
       const p=pools[n%pools.length];if(p.length){const q=p.shift();picked.push(q);seen.add(q.id);}
     }
@@ -635,8 +682,14 @@ function basicCourseCard(){
  return `<section class="panel"><h2>기본 명령어 60분 코스</h2><p>파일·디렉터리 → 파일 내용 → 권한 → 검색 → 압축 → 디스크 → 프로세스 → 사용자 → 시스템 → 종합 복습</p><p>9개 분야를 5분씩 이해하고 15분 동안 섞어서 확인합니다. 상황 예제와 자체 제작 문제·관련 기출로 연습합니다.</p><details><summary>배우는 명령어 전체 보기</summary>${window.BASIC_CURRICULUM.slice(0,-1).map(u=>`<p><strong>${esc(u.title)}</strong><br>${esc(u.goal)}</p>`).join('')}</details><p>${button(activeSession()&&state.session.focus?.courseTrack==='basic'?'기본 명령어 코스 이어서':'기본 명령어 코스 시작','start-basic-curriculum')}</p><p class="small">학습 범위 참고: <a href="https://programjy.tistory.com/entry/리눅스마스터2급2차정리" target="_blank" rel="noopener noreferrer">사용자 제공 정리 글</a> · 설명과 추가 문제는 별도 작성했으며 각 단계에 매뉴얼을 연결했습니다.</p></section>`;
 }
 function curriculumPage(){
-  main.innerHTML=heading('이해하고 반복하는 맞춤 코스',`기존 집중 단계에 핵심노트 100개 개념을 모두 연결했습니다. 기출 외 연습문제 231개와 관련 기출을 함께 풉니다. 전체 권장 ${courseMinutes()}분입니다.`)+recallCourseCard()+basicCourseCard()+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>전체 코스는 ${courseUnits().length}단계입니다. 추가 개념은 짧은 단계로 나누었으며 여러 번에 나눠 학습할 수 있습니다. 기본 시간은 ${courseMinutes()}분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course&&!state.session.focus.courseTrack?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&!state.session.focus.courseTrack&&state.session.focus.courseVersion!==CURRENT_COURSE_VERSION?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('100개 개념 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>한 번에 전부 끝내기보다 몇 단계씩 학습하세요. 다음 학습 때 저장된 위치에서 이어가고, 시간이 끝났다면 10분 연장을 미리 사용하세요. 완료 후에는 오답·복습 메뉴에서 어려웠던 개념을 다시 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
+ const active=activeSession()&&state.session.focus?.course;
+ main.innerHTML=heading('맞춤학습 · 출처별로 선택','기출문제와 기출 외 연습문제를 분리했습니다. 시간이 짧다면 한 분야씩 시작하세요.')+
+ (active?`<section class="callout"><h2>진행 중인 학습</h2><p>${esc(state.session.label)}</p><a class="btn" href="#session">저장된 위치에서 이어서</a><p>다른 코스로 전환하면 현재 문제 세트는 바뀌지만 이미 채점한 풀이·오답 기록은 유지됩니다.</p></section>`:'')+
+ sourceCourseCard('past')+sourceCourseCard('nonpast')+
+ `<section class="panel"><h2>학습 방식</h2><p>개념 설명 → 한 문제씩 즉시 채점 → 종합 복습 순서입니다. 오답·헷갈림은 최대 두 번 추가로 연습합니다. 각 코스에는 선택한 출처의 문제만 나옵니다.</p><p>위치와 답안은 자동 저장되며 시간은 화면을 떠나도 흐릅니다. 필요하면 종료 전에 10분 연장 버튼을 사용하세요.</p></section><details><summary>기존 코스 더 보기</summary>`+recallCourseCard()+basicCourseCard()+
+ `<section class="panel"><h2>기출·기출 외 통합 코스</h2><p>100개 개념을 함께 학습하는 기존 코스입니다. 권장 ${courseMinutes()}분입니다.</p>${button('100개 개념 확장 코스 새로 시작','restart-curriculum','','secondary')}</section></details>`;
 }
+
 function courseIntro(){
   const s=state.session,it=s.items[s.index],u=courseUnits(s)[it.lesson];
   main.innerHTML=heading(`${it.lesson+1}단계 · ${u.title}`,u.goal)+`<section class="panel course-intro"><span class="pill outline">권장 ${u.minutes}분 · 설명부터 이해하기</span><p>${esc(u.story)}</p><ol>${u.steps.map(t=>`<li>${esc(t)}</li>`).join('')}</ol><div class="memory"><strong>상황에 적용</strong><p>${esc(u.example)}</p></div><h3>설명을 가리고 말해 보세요</h3><p>${esc(u.recall)}</p><details><summary>생각한 뒤 답 확인</summary><p>${esc(u.answer)}</p></details><p>${button('이해했어요 · 문제 풀기','course-ready')}</p><p class="small muted">다음 문제를 눌러야 진행합니다. 맞혔어도 헷갈리면 해설 아래에서 표시할 수 있습니다.</p>${u.sources?`<p class="small">참고: ${u.sources.map(([title,url])=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(title)}</a>`).join(' · ')}</p>`:''}${timerControls()}<a href="#curriculum">코스 순서 보기</a></section>`;
@@ -661,8 +714,10 @@ function courseSummary(){
   const rows=units[mixedLesson].concepts.map(id=>{
     const c=CONCEPTS.find(c=>c.id===id),items=s.items.filter(i=>i.checked&&c.questionIds.includes(i.id));
     const mixed=items.filter(i=>i.lesson===mixedLesson),correct=mixed.filter(i=>isCorrect(BY_ID[i.id],i.selected)&&!i.unsure);
-    const ok=new Set(correct.map(i=>i.id)).size>=2&&mixed.every(i=>isCorrect(BY_ID[i.id],i.selected)&&!i.unsure);
-    return `<tr><th scope="row">${esc(c.title)}</th><td>${items.length}회</td><td>${!mixed.length?'종합 확인 전':c.questionIds.length<2?'문항 부족 · 개념 재확인':ok?'이번 종합 확인 통과':'다시 복습'}</td></tr>`;
+    const required=units[mixedLesson].mixedPerConcept||2;
+    const available=c.questionIds.filter(id=>courseMatchesSource(id,units[mixedLesson].source)).length;
+    const ok=new Set(correct.map(i=>i.id)).size>=required&&mixed.every(i=>isCorrect(BY_ID[i.id],i.selected)&&!i.unsure);
+    return `<tr><th scope="row">${esc(c.title)}</th><td>${items.length}회</td><td>${!mixed.length?'종합 확인 전':available<required?'문항 부족 · 개념 재확인':ok?'이번 종합 확인 통과':'다시 복습'}</td></tr>`;
   });
-  return `<section class="panel"><h2>개념별 다음 복습</h2><p>종합 복습에서 서로 다른 2문제를 헷갈림 없이 맞혔는지 확인합니다. 오답이 남으면 다시 복습으로 표시합니다. 오늘의 확인 결과이며 장기 암기 완료 판정은 아닙니다.</p><table class="concept-table"><thead><tr><th>개념</th><th>풀이</th><th>다음 단계</th></tr></thead><tbody>${rows.join('')}</tbody></table><a class="btn secondary" href="#curriculum">코스 순서 · 반복 계획</a></section>`;
+  return `<section class="panel"><h2>개념별 다음 복습</h2><p>종합 복습에서 개념별 ${units[mixedLesson].mixedPerConcept||2}문제를 헷갈림 없이 맞혔는지 확인합니다. 오답이 남으면 다시 복습으로 표시합니다. 오늘의 확인 결과이며 장기 암기 완료 판정은 아닙니다.</p><table class="concept-table"><thead><tr><th>개념</th><th>풀이</th><th>다음 단계</th></tr></thead><tbody>${rows.join('')}</tbody></table><a class="btn secondary" href="#curriculum">코스 순서 · 반복 계획</a></section>`;
 }
