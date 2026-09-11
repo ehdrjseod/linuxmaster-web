@@ -74,7 +74,32 @@ window.STUDY_CURRICULUM = [
   sources:[['GNU tar 압축 형식','https://www.gnu.org/software/tar/manual/html_node/gzip.html'],['GNU gzip 매뉴얼','https://www.gnu.org/software/gzip/manual/gzip.html']]},
  {...window.LEGACY_STUDY_CURRICULUM.at(-1),concepts:[...window.LEGACY_STUDY_CURRICULUM.at(-1).concepts,'format','fsck','compression','tar'],steps:[...window.LEGACY_STUDY_CURRICULUM.at(-1).steps,'파일 시스템은 생성과 복구를, 압축은 도구·확장자·묶음 해제를 구분합니다.']}
 ];
-function courseUnits(session){return session?.focus?.course&&session.focus.courseVersion!==2?window.LEGACY_STUDY_CURRICULUM:window.STUDY_CURRICULUM;}
+// Version 2 keeps XFS/compression and its original mixed-review index.
+window.STUDY_CURRICULUM_V2 = window.STUDY_CURRICULUM;
+window.STUDY_CURRICULUM = [
+ ...window.STUDY_CURRICULUM_V2.slice(0,-1),
+ {id:'printers',title:'프린터: BSD·System V와 CUPS',minutes:10,concepts:['print-commands','printing'],
+  goal:'인쇄 요청·대기열 확인·취소 명령을 계열별로 구분한다.',
+  story:'공용 프린터 앞에서 번호표를 뽑는다고 생각하세요. 문서를 맡기고, 내 순서를 확인하고, 잘못 맡긴 작업을 취소합니다. BSD와 System V는 이 세 가지 일을 부르는 명령 이름이 다른 유닉스 계열입니다. “BSD 프린터”는 프린터 기종을 뜻하지 않습니다.',
+  steps:['BSD 계열: lpr는 인쇄 요청, lpq는 대기열 확인, lprm은 작업 제거입니다. q를 queue(줄), rm을 remove(제거)와 연결하세요.',
+   'System V 계열: lp는 인쇄 요청, lpstat은 상태·작업 확인, cancel은 작업 취소입니다. lpr ↔ lp, lpq ↔ lpstat, lprm ↔ cancel을 같은 역할끼리 짝지으세요.',
+   '인쇄 부수는 lpr -#3 또는 lp -n 3입니다. 프린터 지정은 lpr -P office 또는 lp -d office입니다. 같은 목적이라도 명령에 따라 옵션이 다릅니다.',
+   '예를 들어 lpq로 작업 번호 42를 확인한 뒤 lprm 42로 취소합니다. System V 방식은 lpstat -o로 요청 ID를 확인하고 cancel office-42처럼 취소합니다. 프린터 이름과 작업 번호는 실제 출력 결과를 사용합니다.',
+   'CUPS는 인쇄 작업을 관리하는 시스템이며 BSD 방식과 System V 방식 명령을 모두 제공합니다. IPP는 인쇄 통신 규약이고 기본 포트는 631입니다. CUPS는 시스템, IPP는 통신 규약, lp·lpr는 명령으로 구분하세요.',
+   '기출에서 PPD는 프린터 기능 설명 파일, system-config-printer는 해당 배포판의 GUI 프린터 설정 도구와 연결합니다. 명령어 계열을 묻는지, 인쇄 시스템·프로토콜을 묻는지 먼저 살펴보세요.'],
+  example:'report.txt를 office 프린터에서 3부 인쇄: BSD 방식은 lpr -P office -#3 report.txt, System V 방식은 lp -d office -n 3 report.txt. 대기열 확인은 lpq, 작업 제거는 lprm입니다.',
+  recall:'BSD에서 “내 인쇄 작업이 기다리는지 확인”과 “작업 취소”는 각각 무엇인가요? System V에서는 어떻게 바뀌나요?',
+  answer:'BSD는 lpq로 확인하고 lprm으로 취소합니다. System V는 lpstat으로 확인하고 cancel로 취소합니다. 요청 명령인 lpr·lp와 구분하세요. CUPS에서는 두 방식 모두 사용할 수 있습니다.',
+  sources:[['CUPS 인쇄 명령 안내','https://www.cups.org/doc/options.html'],['lpr 옵션','https://www.cups.org/doc/man-lpr.html'],['lp 옵션','https://www.cups.org/doc/man-lp.html']]},
+ {...window.STUDY_CURRICULUM_V2.at(-1),concepts:[...window.STUDY_CURRICULUM_V2.at(-1).concepts,'print-commands','printing'],steps:[...window.STUDY_CURRICULUM_V2.at(-1).steps,'프린터는 BSD·System V 계열과 요청·조회·취소 역할을 먼저 구분합니다.']}
+];
+const CURRENT_COURSE_VERSION=3;
+function courseUnits(session){
+ if(!session?.focus?.course)return window.STUDY_CURRICULUM;
+ if(session.focus.courseVersion===3)return window.STUDY_CURRICULUM;
+ if(session.focus.courseVersion===2)return window.STUDY_CURRICULUM_V2;
+ return window.LEGACY_STUDY_CURRICULUM;
+}
 function courseMinutes(){return courseUnits().reduce((n,u)=>n+u.minutes,0);}
 function coursePool(unit){return unit.concepts.flatMap(id=>conceptQuestions(CONCEPTS.find(c=>c.id===id)));}
 function courseItems(){
@@ -93,11 +118,11 @@ function startCurriculum(restart=false){
   if(!restart&&activeSession()&&state.session.focus?.course){go('session');return;}
   if(activeSession()&&!confirm('맞춤 코스를 시작하면 진행 중인 문제 세트가 바뀝니다. 이미 채점한 기록은 유지됩니다. 시작할까요?'))return;
   recoverLastArchive();
-  state.session={syncId:cryptoId(),mode:'practice',label:'맞춤 80분 · 개념 이해 코스',examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes()*MINUTE,index:0,items:courseItems(),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:2,conceptIds:courseUnits().at(-1).concepts}};
+  state.session={syncId:cryptoId(),mode:'practice',label:`맞춤 ${courseMinutes()}분 · 개념 이해 코스`,examDate:null,started:Date.now(),deadline:Date.now()+courseMinutes()*MINUTE,index:0,items:courseItems(),finished:false,applied:{},courseRead:{},focus:{course:true,courseVersion:CURRENT_COURSE_VERSION,conceptIds:courseUnits().at(-1).concepts}};
   save();go('session');
 }
 function curriculumPage(){
-  main.innerHTML=heading('이해하고 반복하는 맞춤 코스','특수 권한 → 우선순위 → 쿼터 → Bash → 패키지 → XFS → 압축·묶음 → 종합 복습. 권장 80분입니다.')+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>기본 시간은 80분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&state.session.focus.courseVersion!==2?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('XFS·압축 포함 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>오늘: 설명을 이해하고 코스를 1회 진행합니다. 내일: 같은 코스를 다시 풀면서 설명을 보기 전에 이유를 말합니다. 3일 뒤: 오답·복습 메뉴에서 남아 있는 문제를 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
+  main.innerHTML=heading('이해하고 반복하는 맞춤 코스',`특수 권한 → 우선순위 → 쿼터 → Bash → 패키지 → XFS → 압축·묶음 → 프린터 → 종합 복습. 권장 ${courseMinutes()}분입니다.`)+`<div class="callout"><h2>읽기 → 떠올리기 → 한 문제씩 확인</h2><p>각 단계의 쉬운 설명을 읽고, 답을 가린 질문에 스스로 설명한 뒤 문제를 풉니다. 보기를 고르면 즉시 해설이 나오고, 오답·헷갈림은 같은 단계에서 최대 두 번 추가로 연습합니다. 마지막에는 다른 문제를 우선해 섞습니다.</p><p>기본 시간은 ${courseMinutes()}분이며 필요하면 10분씩 연장할 수 있습니다. 시간이 끝나면 채점한 내용까지 저장합니다. 화면을 떠나도 시간은 계속 흐릅니다. 아래 시간은 권장 분량이며 단계는 문제를 풀면서 넘어갑니다.</p>${button(activeSession()&&state.session.focus?.course?'맞춤 코스 이어서':'맞춤 코스 시작','start-curriculum')}${activeSession()&&state.session.focus?.course&&state.session.focus.courseVersion!==CURRENT_COURSE_VERSION?`<p>진행 중인 이전 코스는 그대로 이어집니다. 새 단계를 포함하려면 확장 코스를 시작하세요. 이미 채점한 학습 기록은 유지됩니다.</p>${button('프린터 포함 확장 코스 새로 시작','restart-curriculum','','secondary')}`:''}</div><div class="topic-grid">${courseUnits().map((u,i)=>`<article class="panel"><span class="pill outline">${i+1}단계 · ${u.minutes}분</span><h2>${esc(u.title)}</h2><p>${esc(u.goal)}</p></article>`).join('')}</div><section class="panel"><h2>반복 계획</h2><p>오늘: 설명을 이해하고 코스를 1회 진행합니다. 내일: 같은 코스를 다시 풀면서 설명을 보기 전에 이유를 말합니다. 3일 뒤: 오답·복습 메뉴에서 남아 있는 문제를 확인합니다.</p><p>이미 읽고 채점한 위치는 자동 저장됩니다. 코스를 다시 시작하면 보기 순서가 바뀌며, 기존 풀이 기록도 남습니다.</p></section>`;
 }
 function courseIntro(){
   const s=state.session,it=s.items[s.index],u=courseUnits(s)[it.lesson];
